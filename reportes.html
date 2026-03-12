@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reportes Financieros</title>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<main class="main-content">
+<header class="header" id="main-header"></header>
+
+<div class="card card-header">
+  <div class="top-bar">
+
+    <div class="title-section">
+      <h1>Reportes Financieros</h1>
+      <span class="subtitle">Análisis consolidado por período</span>
+    </div>
+
+    <div class="controls">
+
+      <div class="form-group">
+        <label for="start">Desde</label>
+        <input type="date" id="start">
+      </div>
+
+      <div class="form-group">
+        <label for="end">Hasta</label>
+        <input type="date" id="end">
+      </div>
+
+      <div class="form-group">
+        <label for="sucursal">Sucursal</label>
+        <select id="sucursal">
+          <option value="TODAS">Todas</option>
+        </select>
+      </div>
+
+      <button class="btn-primary" onclick="generarReporte()">
+        Generar Reporte
+      </button>
+
+    </div>
+  </div>
+</div>
+	 
+
+    <div id="loading">Calculando datos financieros...</div>
+
+   <div id="reportes" class="grid" style="display: none; gap: 20px; flex-wrap: wrap;">
+        
+  
+    <div class="card">
+        <div class="card-header">Estado de Resultados</div>
+        <div class="report-table">
+            <div class="report-row" style="--accent: var(--color-efectivo)">
+                <span>Ingreso x Venta</span>
+                <span class="money" id="er-ventas">0.00</span>
+            </div>
+            <div class="report-row" style="--accent: var(--alert-error-text)">
+                <span>(-) Costo de Venta</span>
+                <span class="money red" id="er-costo">0.00</span>
+            </div>
+            <div class="report-row row-highlight">
+                <span class="uppercase-bold">Utilidad Bruta</span>
+                <div>
+                    <span class="money" id="er-bruta">0.00</span>
+                    <span class="pct" id="er-bruta-pct">0%</span>
+                </div>
+            </div>
+            <div class="report-row header" style="background:transparent; border:none; padding-top:20px;">
+                <span class="section-title">Gastos Operativos</span>
+            </div>
+            <div id="lista-gastos">
+                </div>
+            <div class="report-row">
+                <span>Total Gastos</span>
+                <span class="money red" id="er-total-gastos">0.00</span>
+            </div>
+            <div class="report-row row-highlight" style="border-top-color: var(--brand-primary)">
+                <span class="uppercase-bold">Utilidad Neta</span>
+                <div>
+                    <span class="money green" id="er-neta">0.00</span>
+                    <span class="pct" id="er-neta-pct">0%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="report-column">
+        <div class="card" style="margin-bottom: 20px;">
+            <div class="card-header">Análisis de ITBIS</div>
+            <div class="report-row">
+                <span>ITBIS Generado (Ventas)</span>
+                <span class="money" id="itbis-v">0.00</span>
+            </div>
+            <div class="report-row">
+                <span>(-) ITBIS Deducible</span>
+                <span class="money red" id="itbis-c">0.00</span>
+            </div>
+            <div class="report-row row-highlight">
+                <span class="uppercase-bold">ITBIS a Pagar</span>
+                <span class="money" id="itbis-pagar">0.00</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">Flujo de Efectivo</div>
+            <div class="report-row" style="--accent: var(--color-efectivo)">
+                <span class="uppercase-bold">Entradas (Cobrado)</span>
+                <span class="money green" id="flujo-in">0.00</span>
+            </div>
+            <div class="report-row" style="--accent: var(--alert-error-text)">
+                <span>Salidas (Pagado)</span>
+                <span class="money red" id="flujo-out">0.00</span>
+            </div>
+            <div class="report-row row-highlight">
+                <span class="uppercase-bold">Flujo Neto</span>
+                <span class="money" id="flujo-neto">0.00</span>
+            </div>
+        </div>
+    </div>
+
+
+<div class="card full-width" style="margin-top: 20px;">
+    <div class="card-header">Detalle de Cobros y Métodos de Pago</div>
+    <div class="sucursal-grid">
+        
+        <div class="report-section" id="sec-metodos">
+            <h3 class="section-title">Métodos de Pago</h3>
+            <div class="report-table" id="tabla-metodos"></div>
+        </div>
+        
+        <div class="report-section" id="sec-bancos">
+            <h3 class="section-title">Entradas por Banco</h3>
+            <div class="report-table" id="tabla-bancos"></div>
+        </div>
+
+        <div class="report-section" id="sec-cartera">
+            <h3 class="section-title">Cartera y Ajustes</h3>
+            <div class="report-table" id="tabla-cartera"></div>
+        </div>
+    </div>
+</div>
+
+<div class="card full-width" style="margin-top: 20px;">
+    <div class="card-header">Desglose Detallado de Gastos</div>
+    <div class="table-scroll-container">
+        <table class="report-table">
+            <thead>
+                <tr>
+                    <th>Categoría</th>
+                    <th>Descripción</th>
+                    <th>Naturaleza</th>
+                    <th style="text-align:right">Monto</th>
+                </tr>
+            </thead>
+            <tbody id="tabla-gastos-cuerpo"></tbody>
+        </table>
+    </div>
+</div>
+</div>
+
+</main>
+<script>
+if (sessionStorage.getItem('session_active') !== 'true') {
+      window.location.href = 'login.html';
+  }
+
+    // --- CONFIGURACIÓN ---
+    const API_URL = "https://script.google.com/macros/s/AKfycbzohMsnnK8lblbAFmKm8hSwDBKW_X3EOMjggic_Wb6N9msb11z4KdgsBhd2As0YqPbr/exec"; 
+
+    const fmt = new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' });
+    const pct = new Intl.NumberFormat('es-DO', { style: 'percent', minimumFractionDigits: 2 });
+    const f = (val) => fmt.format(val || 0);
+
+    // Inicializar fechas al cargar
+    const hoy = new Date();
+    document.getElementById('start').valueAsDate = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+    document.getElementById('end').valueAsDate = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
+
+    // Cargar Sucursales
+    fetch(API_URL + "?action=getBranches")
+        .then(r => r.json())
+        .then(list => {
+            const sel = document.getElementById('sucursal');
+            list.forEach(s => {
+                let opt = document.createElement('option');
+                opt.value = s; opt.innerText = s;
+                sel.appendChild(opt);
+            });
+        });
+
+    function generarReporte() {
+        document.getElementById('loading').style.display = 'block';
+        document.getElementById('reportes').style.display = 'none';
+
+        const params = new URLSearchParams({
+            action: 'getData',
+            startDate: document.getElementById('start').value,
+            endDate: document.getElementById('end').value,
+            sucursal: document.getElementById('sucursal').value
+        });
+
+        fetch(API_URL + "?" + params)
+            .then(res => res.json())
+            .then(data => render(data))
+            .catch(e => {
+                console.error(e);
+                alert("Error de conexión: " + e);
+                document.getElementById('loading').style.display = 'none';
+            });
+    }
+
+    function render(data) {
+        const loading = document.getElementById('loading');
+        const reportes = document.getElementById('reportes');
+        if(loading) loading.style.display = 'none';
+        if(reportes) reportes.style.display = 'flex';
+
+        if (!data || !data.estadoResultados) {
+            alert("No se devolvieron resultados.");
+            return;
+        }
+
+        const { estadoResultados: er, analisisItbis: it, flujoEfectivo: fl, reporteMetodos: rmRaw, reporteGastosDetallado: rgD } = data;
+        const rm = rmRaw || {};
+
+        // 1. ESTADO DE RESULTADOS (KPIs Superiores)
+        txt('er-ventas', er.ventas);
+        txt('er-costo', er.costoVenta);
+        txt('er-bruta', er.utilidadBruta);
+        document.getElementById('er-bruta-pct').innerText = pct.format(er.margenBruto || 0);
+
+        // 2. LISTA DE GASTOS (ESTADO DE RESULTADOS)
+        let sumaGastosReales = 0;
+        let htmlGastosER = "";
+        const categoriasValidas = ['gasto de venta', 'gasto operativo', 'gasto administrativo', 'sueldos', 'gasto de personal', 'impuestos', 'nomina', 'alquiler', 'servicios'];
+
+        if (er.gastosDetalle) {
+            Object.entries(er.gastosDetalle).forEach(([key, val]) => {
+                const nombreGasto = key.toLowerCase();
+                const esCuentaxPagar = nombreGasto.includes('por pagar') || nombreGasto.includes('cxp') || nombreGasto.includes('abono');
+                const esGastoReal = categoriasValidas.some(cat => nombreGasto.includes(cat));
+
+                if (val > 0 && esGastoReal && !esCuentaxPagar) {
+                    sumaGastosReales += val;
+                    htmlGastosER += `
+                        <div class="report-row">
+                            <span>${key}</span>
+                            <span class="money red">${f(val)}</span>
+                        </div>`;
+                }
+            });
+        }
+        document.getElementById('lista-gastos').innerHTML = htmlGastosER;
+
+        const utilidadNetaCalculada = er.utilidadBruta - sumaGastosReales;
+        txt('er-total-gastos', sumaGastosReales);
+        txt('er-neta', utilidadNetaCalculada);
+        document.getElementById('er-neta-pct').innerText = pct.format(er.ventas > 0 ? (utilidadNetaCalculada / er.ventas) : 0);
+        document.getElementById('er-neta').className = utilidadNetaCalculada >= 0 ? 'money green' : 'money red';
+
+        // 3. TABLA DETALLADA DE GASTOS (FIJOS VS VARIABLES)
+        const tablaCuerpo = document.getElementById('tabla-gastos-cuerpo');
+        if (tablaCuerpo && rgD) {
+            let htmlTabla = '';
+            let tFijo = 0, tVar = 0;
+            const tGral = rgD.reduce((acc, g) => acc + parseFloat(g.monto || 0), 0);
+
+            rgD.forEach(g => {
+                const monto = parseFloat(g.monto || 0);
+                const esFijo = g.naturaleza.toLowerCase().includes('fijo');
+                if (esFijo) tFijo += monto; else tVar += monto;
+                
+                const pInd = tGral > 0 ? (monto / tGral * 100).toFixed(1) : 0;
+                htmlTabla += `
+                    <tr>
+                        <td>${g.categoria}</td>
+                        <td>${g.descripcion}</td>
+                        <td class="text-center"><span class="badge ${esFijo ? 'fijo' : 'variable'}">${g.naturaleza}</span></td>
+                        <td class="money text-right">${f(monto)} <small style="color:var(--text-muted)">(${pInd}%)</small></td>
+                    </tr>`;
+            });
+
+            const pF = tGral > 0 ? (tFijo / tGral * 100).toFixed(1) : 0;
+            const pV = tGral > 0 ? (tVar / tGral * 100).toFixed(1) : 0;
+
+            htmlTabla += `
+                <tr style="background: var(--bg-soft); font-weight: 700;">
+                    <td colspan="3" style="text-align: right; padding-right: 15px; color: var(--text-sub);">TOTAL GASTOS FIJOS</td>
+                    <td class="money text-right" style="color: #60a5fa;">${f(tFijo)} <span style="background:rgba(96,165,250,0.1); padding:2px 6px; border-radius:4px; font-size:0.75rem">${pF}%</span></td>
+                </tr>
+                <tr style="background: var(--bg-soft); font-weight: 700;">
+                    <td colspan="3" style="text-align: right; padding-right: 15px; color: var(--text-sub);">TOTAL GASTOS VARIABLES</td>
+                    <td class="money text-right" style="color: var(--brand-primary);">${f(tVar)} <span style="background:var(--brand-soft); padding:2px 6px; border-radius:4px; font-size:0.75rem">${pV}%</span></td>
+                </tr>
+                <tr style="background: var(--bg-surface); font-weight: 800; border-top: 2px solid var(--brand-primary);">
+                    <td colspan="3" style="text-align: right; padding-right: 15px; color: var(--text-main);">TOTAL GENERAL GASTOS</td>
+                    <td class="money text-right" style="font-size: 1.1rem; color: var(--text-main);">${f(tGral)} <span style="background:var(--bg-soft); padding:2px 6px; border-radius:4px; font-size:0.75rem">100%</span></td>
+                </tr>`;
+            tablaCuerpo.innerHTML = htmlTabla;
+        }
+
+        // 4. ITBIS Y FLUJO
+        txt('itbis-v', it.debitoFiscal);
+        txt('itbis-c', it.creditoFiscal);
+        txt('itbis-pagar', it.aPagar);
+        txt('flujo-in', fl.ingresos);
+        txt('flujo-out', fl.egresos);
+        txt('flujo-neto', fl.neto);
+
+        // 5. MÉTODOS, BANCOS Y CARTERA
+        renderTablasMetodos(rm);
+    }
+
+    function renderTablasMetodos(rm) {
+        const inyectar = (id, etiqueta, obj, col) => {
+            const cont = document.getElementById(id);
+            if (obj && obj.monto > 0) {
+                cont.innerHTML += `
+                    <div class="report-row" style="--accent: var(${col})">
+                        <span>${etiqueta}</span>
+                        <span class="money">${f(obj.monto)}</span>
+                        <span>${obj.cant}</span>
+                    </div>`;
+                return true;
+            }
+            return false;
+        };
+
+        const tMet = document.getElementById('tabla-metodos');
+        const tBan = document.getElementById('tabla-bancos');
+        const tCar = document.getElementById('tabla-cartera');
+
+        if(tMet) tMet.innerHTML = '<div class="report-row header"><span>Concepto</span><span>Monto</span><span>Cant.</span></div>';
+        if(tBan) tBan.innerHTML = '';
+        if(tCar) tCar.innerHTML = '';
+
+        let okM = false, okB = false, okC = false;
+        okM |= inyectar('tabla-metodos', 'Efectivo', rm.efectivo, '--color-efectivo');
+        okM |= inyectar('tabla-metodos', 'Tarjeta', rm.tarjeta, '--color-bhd');
+        okM |= inyectar('tabla-metodos', 'Transferencia', rm.transferencia, '--color-popular');
+
+        okB |= inyectar('tabla-bancos', 'Popular', rm.popular, '--color-popular');
+        okB |= inyectar('tabla-bancos', 'Reservas', rm.banreservas, '--color-reservas');
+        okB |= inyectar('tabla-bancos', 'BHD', rm.bhd, '--color-bhd');
+
+        okC |= inyectar('tabla-cartera', 'Cuentas x Cobrar', rm.cxp, '--alert-error-text');
+        okC |= inyectar('tabla-cartera', 'Abonos (Cobros)', rm.abonoCxp, '--color-efectivo');
+        okC |= inyectar('tabla-cartera', 'Notas de Crédito', rm.notaCredito, '--text-muted');
+
+        document.getElementById('sec-metodos').style.display = okM ? 'block' : 'none';
+        document.getElementById('sec-bancos').style.display = okB ? 'block' : 'none';
+        document.getElementById('sec-cartera').style.display = okC ? 'block' : 'none';
+    }
+
+    function txt(id, val) {
+        const el = document.getElementById(id);
+        if(el) el.innerText = f(val);
+    }
+</script>
+
+ <script src="script.js"></script>
+</body>
+</html>

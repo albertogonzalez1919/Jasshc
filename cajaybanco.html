@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<title>Efectivo Caja y Banco</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header class="header" id="main-header"></header>
+<main class="main-content">
+<div class="page-wrapper">
+<div class="card visible">
+<div class="top-bar">
+  <div class="title-group">
+    <h1>Caja y bancos</h1>
+  </div>
+  <button id="btnRefresh" class="btn-mint btn-refresh">
+    <span id="refreshText">Actualizar</span>
+  </button>
+</div>
+</div>
+
+
+<div class="card visible">
+  <div class="card-title">Total Consolidado</div>
+  <div class="balances-grid">
+<div class="b-card efe"><div class="label">Efectivo</div><div class="amount" id="gbEfectivo">RD$ 0.00</div></div>
+<div class="b-card pop"><div class="label">Popular</div><div class="amount" id="gbPopular">RD$ 0.00</div></div>
+<div class="b-card res"><div class="label">Banreservas</div><div class="amount" id="gbBanreservas">RD$ 0.00</div></div>
+<div class="b-card bhd"><div class="label">BHD</div><div class="amount" id="gbBHD">RD$ 0.00</div></div>
+<div class="b-card tot"><div class="label">TOTAL</div><div class="amount" id="gbTotal">RD$ 0.00</div></div>
+</div>
+</div>
+<div class="card visible">
+<div id="sucursalContainer" class="sucursal-grid"></div>
+</div>
+<div class="card visible">
+  <div class="card-title">Registrar Movimiento</div>
+ 
+  <form id="movForm">
+
+    <div class="form-grid">
+
+      <div class="field">
+        <label>Fecha</label>
+        <input type="date" id="fecha" required>
+      </div>
+
+      <div class="field" id="boxSucursalNormal">
+        <label for="sucursal">Sucursal</label>
+        <select id="sucursal" required>
+          <option value="">Cargando...</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Tipo</label>
+        <select id="tipo" required>
+          <option value="Ingreso x venta">Ingreso x venta</option>
+          <option value="Egreso">Egreso</option>
+          <option value="Transferencia interna">Transferencia interna</option>
+          <option value="Ingreso de capital">Ingreso de capital</option>
+          <option value="Egreso de capital">Egreso de capital</option>
+        </select>
+      </div>
+
+      <div class="field">
+  <label>Monto</label>
+  <div class="input-money">
+    <span class="currency">RD$</span>
+    <input type="number" step="0.01" min="0.01" id="monto" required>
+  </div>
+</div>
+
+      <div class="field" id="boxOrigen" style="display:none">
+        <label>Cuenta Origen</label>
+        <select id="origen">
+          <option value="efectivo">Efectivo</option>
+          <option value="popular">Popular</option>
+          <option value="banreservas">Banreservas</option>
+          <option value="bhd">BHD</option>
+        </select>
+      </div>
+
+      <div class="field" id="boxDestino">
+        <label>Cuenta Destino</label>
+        <select id="destino">
+          <option value="efectivo">Efectivo</option>
+          <option value="tarjeta">Tarjeta (Banreservas)</option>
+          <option value="popular">Popular</option>
+          <option value="banreservas">Banreservas</option>
+          <option value="bhd">BHD</option>
+        </select>
+      </div>
+
+      <div class="field" id="boxSucDesde" style="display:none">
+        <label>Sucursal Desde</label>
+        <select id="sucursalDesde"></select>
+      </div>
+
+      <div class="field" id="boxSucHasta" style="display:none">
+        <label>Sucursal Hasta</label>
+        <select id="sucursalHasta"></select>
+      </div>
+
+      <div class="field">
+        <label>Concepto</label>
+        <input type="text" id="concepto" required>
+      </div>
+
+    </div>
+
+    <div class="form-actions">
+  <button type="submit" class="btn-mint">Registrar</button>
+</div>
+
+    <div id="registerMsg"></div>
+
+  </form>
+</div>
+
+</main>
+</div>
+</div>
+
+<script>
+  if (sessionStorage.getItem('session_active') !== 'true') {
+      window.location.href = 'login.html';
+  }
+
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzxUyUnwp5bY5gtnRXHX7pp47TFl-BxEW7Gb_tKBs4flpqvIgqn8c6XdR2yZ8-bktvN/exec"; 
+
+const qs = s => document.querySelector(s);
+
+const fmt = n => 'RD$ ' + Number(n || 0)
+  .toLocaleString('en-US', { minimumFractionDigits: 2 });
+
+/* ===========================
+   BOTÓN ACTUALIZAR
+=========================== */
+
+function loadingButton(isLoading) {
+  const btn = qs('#btnRefresh');
+
+  if (!btn) return;
+
+  if (isLoading) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Actualizando...';
+  } else {
+    btn.disabled = false;
+    btn.innerHTML = 'Actualizar';
+  }
+}
+
+/* ===========================
+   INIT
+=========================== */
+
+function startApp() {
+
+  qs('#fecha').valueAsDate = new Date();
+
+  qs('#btnRefresh').addEventListener('click', init);
+
+  const form = qs('#movForm');
+
+  if (form) {
+    form.addEventListener('submit', submitMovimiento);
+  } else {
+    console.error("Formulario no encontrado");
+  }
+
+  logica();
+
+  init();
+}
+
+startApp();
+
+async function init() {
+  loadingButton(true);
+
+  try {
+    await cargarSucursales();
+    await loadBalances();
+  } catch (e) {
+    console.error(e);
+  }
+
+  loadingButton(false);
+}
+
+/* ===========================
+   SUCURSALES
+=========================== */
+
+async function cargarSucursales() {
+  try {
+
+    const r = await fetch(`${WEB_APP_URL}?action=sucursales`);
+    const res = await r.json();
+
+    if (res.status !== "ok") return;
+
+    const selects = [
+      qs('#sucursal'),
+      qs('#sucursalDesde'),
+      qs('#sucursalHasta')
+    ];
+
+    selects.forEach(sel => {
+
+      if (!sel) return;
+
+      sel.innerHTML = '<option value="">Seleccione</option>';
+
+      res.sucursales.forEach(nombre => {
+        const opt = document.createElement("option");
+        opt.value = nombre;
+        opt.textContent = nombre;
+        sel.appendChild(opt);
+      });
+    });
+
+  } catch (err) {
+    console.error("Error cargando sucursales:", err);
+  }
+}
+
+/* ===========================
+   BALANCES
+=========================== */
+
+async function loadBalances() {
+
+  const r = await fetch(`${WEB_APP_URL}?action=balances`);
+  const j = await r.json();
+
+  if (j.status !== 'ok') return;
+
+  const g = j.global;
+
+  const total =
+    (g.efectivo || 0) +
+    (g.popular || 0) +
+    (g.banreservas || 0) +
+    (g.bhd || 0);
+
+  qs('#gbEfectivo').textContent = fmt(g.efectivo);
+  qs('#gbPopular').textContent = fmt(g.popular);
+  qs('#gbBanreservas').textContent = fmt(g.banreservas);
+  qs('#gbBHD').textContent = fmt(g.bhd);
+  qs('#gbTotal').textContent = fmt(total);
+
+  const cont = qs('#sucursalContainer');
+  cont.innerHTML = '';
+
+  j.sucursales.forEach(s => {
+
+    const totalSuc =
+      (s.efectivo || 0) +
+      (s.popular || 0) +
+      (s.banreservas || 0) +
+      (s.bhd || 0);
+
+    const div = document.createElement('div');
+    div.className = 'suc-box';
+
+    div.innerHTML = `
+      <div class="suc-header">${s.name}</div>
+      <div class="suc-body">
+        <div class="suc-item"><span>Efectivo</span><b>${fmt(s.efectivo)}</b></div>
+        <div class="suc-item"><span>Popular</span><b>${fmt(s.popular)}</b></div>
+        <div class="suc-item"><span>Banreservas</span><b>${fmt(s.banreservas)}</b></div>
+        <div class="suc-item"><span>BHD</span><b>${fmt(s.bhd)}</b></div>
+      </div>
+      <div class="suc-footer"><span>Total</span><span>${fmt(totalSuc)}</span></div>
+    `;
+
+    cont.appendChild(div);
+  });
+}
+
+/* ===========================
+   ENVÍO POST
+=========================== */
+
+async function enviarMovimiento(data) {
+
+  const formData = new URLSearchParams();
+  formData.append("action", "registerMovement");
+
+  Object.keys(data).forEach(k => {
+    formData.append(k, data[k]);
+  });
+
+  const r = await fetch(WEB_APP_URL, {
+    method: 'POST',
+    body: formData
+  });
+
+  const j = await r.json();
+
+  if (j.status !== 'ok') {
+    console.error(j);
+    throw new Error(j.message || 'Error en backend');
+  }
+
+  return j;
+}
+
+/* ===========================
+   SUBMIT
+=========================== */
+
+async function submitMovimiento(e) {
+
+  e.preventDefault();
+
+  const msg = qs('#registerMsg');
+  msg.innerHTML = "Procesando...";
+
+  const monto = Number(qs('#monto').value);
+
+  if (monto <= 0) {
+    msg.innerHTML = '<div class="error-msg">❌ Monto debe ser mayor a 0</div>';
+    return;
+  }
+
+  try {
+
+    const tipo = qs('#tipo').value;
+
+  await enviarMovimiento({
+  fecha: qs('#fecha').value,
+  tipo: tipo,
+  monto: monto,
+  origen: qs('#origen').value,
+  destino: qs('#destino').value,
+  concepto: qs('#concepto').value,
+  sucursal: tipo === "Transferencia interna" ? "" : qs('#sucursal').value,
+  sucursalDesde: tipo === "Transferencia interna" ? qs('#sucursalDesde').value : "",
+  sucursalHasta: tipo === "Transferencia interna" ? qs('#sucursalHasta').value : ""
+  });
+  
+    
+    msg.innerHTML = "✅ Registrado correctamente";
+
+    qs('#movForm').reset();
+    qs('#fecha').valueAsDate = new Date();
+
+    await init();
+
+  } catch (err) {
+    console.error("ERROR COMPLETO:", err);
+    msg.innerHTML = `<div class="error-msg">❌ ${err.message}</div>`;
+  }
+}
+
+/* ===========================
+   LÓGICA VISUAL
+=========================== */
+function logica() {
+
+  qs('#tipo').addEventListener('change', e => {
+
+    const t = e.target.value;
+    const esTransfer = t === "Transferencia interna";
+
+    const boxOrigen = qs('#boxOrigen');
+    const boxDestino = qs('#boxDestino');
+    const boxSucNormal = qs('#boxSucursalNormal');
+    const boxSucDesde = qs('#boxSucDesde');
+    const boxSucHasta = qs('#boxSucHasta');
+
+    const origen = qs('#origen');
+    const destino = qs('#destino');
+    const sucursal = qs('#sucursal');
+    const sucDesde = qs('#sucursalDesde');
+    const sucHasta = qs('#sucursalHasta');
+
+    /* ORIGEN */
+    if (t.includes('Egreso') || esTransfer) {
+      boxOrigen.style.display = "flex";
+      origen.required = true;
+    } else {
+      boxOrigen.style.display = "none";
+      origen.required = false;
+    }
+
+    /* DESTINO */
+    if (t.includes('Ingreso') || esTransfer) {
+      boxDestino.style.display = "flex";
+      destino.required = true;
+    } else {
+      boxDestino.style.display = "none";
+      destino.required = false;
+    }
+
+    /* SUCURSAL NORMAL */
+    if (esTransfer) {
+      boxSucNormal.style.display = "none";
+      sucursal.required = false;
+
+      boxSucDesde.style.display = "flex";
+      boxSucHasta.style.display = "flex";
+      sucDesde.required = true;
+      sucHasta.required = true;
+
+    } else {
+      boxSucNormal.style.display = "flex";
+      sucursal.required = true;
+
+      boxSucDesde.style.display = "none";
+      boxSucHasta.style.display = "none";
+      sucDesde.required = false;
+      sucHasta.required = false;
+    }
+
+  });
+}
+
+</script>
+ <script src="script.js"></script>
+
+</body>
+</html>

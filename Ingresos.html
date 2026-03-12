@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Ingresos</title>
+   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  
+</head>
+<body>
+  <header class="header" id="main-header"></header>
+
+  <div class="page-wrapper">
+    <main class="main-content">
+
+      <div class="top-bar">
+        <h1>Ingresos (Cierre del día)</h1>
+      </div>
+	  
+	  <form id="cierreForm" autocomplete="off">
+
+  <!-- ================= SECCIÓN 1: INFORMACIÓN GENERAL ================= -->
+  <h2>Información general</h2>
+  <div class="form-grid">
+    <div class="col">
+      <label for="Fecha">Fecha </label>
+      <input type="date" id="Fecha" name="fecha" required>
+    </div>
+
+    <div class="col">
+      <label for="NombreCuentaTipo">Nombre de la cuenta / Tipo</label>
+      <input type="text" id="NombreCuentaTipo" name="cuentaContable" value="Ingreso x venta">
+    </div>
+
+    <div class="col">
+      <label for="Descripcion">Descripción</label>
+      <input type="text" id="Descripcion" name="descripcion" value="Cierre diario">
+    </div>
+
+    <div class="col">
+  <label for="Sucursal">Sucursal <span style="color:#b71c1c">*</span></label>
+  <select id="Sucursal" name="sucursal" required>
+    <option value="">Cargando sucursales...</option>
+  </select>
+</div>
+  </div>
+
+  <!-- ================= SECCIÓN 2: VENTA E ITBIS ================= -->
+  <h2>Venta e ITBIS</h2>
+  <div class="form-grid">
+    <div class="col">
+      <label for="Total">Total / Venta bruta <span style="color:#b71c1c">*</span></label>
+      <div class="input-rd">
+        <span class="currency">RD$</span>
+        <input type="number" id="Total" name="total" step="0.01" min="0" required>
+      </div>
+    </div>
+
+    <div class="col">
+      <label for="PorcItbis">% ITBIS incluido</label>
+      <input type="number" id="PorcItbis" step="0.01" min="0" value="18.00" required>
+    </div>
+
+    <div class="col">
+      <label>Subtotal (sin ITBIS)</label>
+      <input type="text" id="Subtotal" readonly value="RD$ 0.00">
+    </div>
+
+    <div class="col">
+      <label>ITBIS de venta</label>
+      <input type="text" id="Itebis" readonly value="RD$ 0.00">
+    </div>
+  </div>
+
+  <!-- ================= SECCIÓN 3: EFECTIVO ================= -->
+  <h2>Efectivo</h2>
+  <div class="form-grid">
+    <div class="col">
+      <label for="MontoEfectivo">Monto efectivo (RD$)</label>
+      <div class="input-rd">
+        <span class="currency">RD$</span>
+        <input type="number" id="MontoEfectivo" name="montoEfectivo" step="0.01" min="0" value="0">
+      </div>
+    </div>
+
+    <div class="col">
+      <label for="CantidadClientesEfectivo">Cantidad clientes efectivo</label>
+      <input type="number" id="CantidadClientesEfectivo" name="cantidadClientesEfectivo" step="1" min="0" value="0">
+    </div>
+  </div>
+
+  <!-- ================= SECCIÓN 4: TARJETAS ================= -->
+  <h2>Pagos con tarjeta</h2>
+  <div id="tarjetasContainer" class="stack-container"></div> <div class="right">
+  <button type="button" id="addTarjeta" class="small-btn">+ agregar otro pago con tarjeta</button>
+  </div>
+
+  <!-- ================= SECCIÓN 5: TRANSFERENCIAS ================= -->
+  <h2>Transferencias</h2>
+  <div class="form-grid">
+    <div class="col">
+      <label for="MontoTransferencias">Monto transferencias (RD$)</label>
+      <input type="number" id="MontoTransferencias" name="montoTransferencias" step="0.01" min="0" value="0">
+    </div>
+
+    <div class="col">
+      <label for="CantidadClientesTransferencia">Cantidad clientes transferencia</label>
+      <input type="number" id="CantidadClientesTransferencia" step="1" min="0" value="0">
+    </div>
+  </div>
+
+<div id="bancosContainer" class="stack-container"></div>
+
+<div class="right">
+  <button type="button" id="addBanco" class="small-btn">
+    + agregar otro banco
+  </button>
+</div>
+
+  <!-- ================= SECCIÓN 6: AJUSTES ================= -->
+  <h2>Notas de crédito y Cuentas por Cobrar</h2>
+  <div class="form-grid">
+    <div class="col">
+      <label for="NotaCredito">Nota de crédito (RD$)</label>
+      <input type="number" id="NotaCredito" step="0.01" min="0" value="0">
+    </div>
+
+    <div class="col">
+      <label for="CantidadNotasCredito">Cantidad de notas de créditos</label>
+      <input type="number" id="CantidadNotasCredito" step="1" min="0" value="0">
+    </div>
+
+    <div class="col">
+      <label for="CuentaPorCobrar">Cuenta por Cobrar (RD$)</label>
+      <input type="number" id="CuentaPorCobrar" name="CuentaPorCobrar" step="0.01" min="0" value="0">
+    </div>
+
+    <div class="col">
+      <label for="CantidadClientesCuentaPorCobrar">Cantidad clientes cuenta por cobrar</label>
+      <input type="number" id="CantidadClientesCuentaPorCobrar" name="cantidad clientes cuenta por cobrar" step="1" min="0" value="0">
+    </div>
+  </div>
+
+  <div class="form-grid">
+    <div class="col">
+      <label for="AbonoCuentaPorCobrar">Abono Cuenta por Cobrar (Cobros)</label>
+      <input type="number" id="AbonoCuentaPorCobrar" name="AbonoCuentaPorCobrar" step="0.01" min="0" value="0">
+    </div>
+  </div>
+
+  <!-- ================= SECCIÓN 7: RESUMEN ================= -->
+  <h2>Resumen del cierre</h2>
+  <div class="form-grid">
+    <div class="col">
+      <label>Comisión (RD$)</label>
+      <input type="text" id="Comision" readonly value="RD$ 0.00">
+    </div>
+
+    <div class="col">
+      <label>Total calculado (RD$)</label>
+      <input type="text" id="TotalCalculado" readonly value="RD$ 0.00">
+    </div>
+
+    <div class="col">
+      <label>Diferencia</label>
+      <input type="text" id="Diferencia" readonly value="RD$ 0.00">
+    </div>
+  </div>
+
+  <div class="checkbox-group">
+  <input type="checkbox" id="ComentarioToggle"> 
+  <span>Agregar comentario de cierre</span> 
+  </div>
+  <textarea id="Comentario" placeholder="Escribe tu comentario..." style="display:none;"></textarea>
+
+  <div class="final-acciones">
+    <div id="Estado" class="summary">
+      <strong>Estado: CIERRE INCOMPLETO O NO CUADRA ⚠️</strong><br>
+      <small>- El monto total de venta debe ser mayor a 0.</small>
+    </div>
+    <button id="guardarBtn" class="btn" type="submit" disabled>GUARDAR CIERRE</button>
+  </div>
+
+</form>
+
+	  
+	  
+
+    </main>
+  </div>
+
+<script>
+if (sessionStorage.getItem('session_active') !== 'true') {
+      window.location.href = 'login.html';
+  }
+  (function() {
+    // URL de tu Web App de Google Apps Script
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwQWIdDLqOI6VXljTGVM9fHNow5EwgbRJiElvjumlyMuWYfxPwjP6WQsgMuEPuLKQ2W/exec";
+	const CONFIG_URL = 'https://script.google.com/macros/s/AKfycbxtFBNhe3YuVv0dZ65aw1l8HBC1pSUj5wCCq8WMAH4k0mqOSJ-dWqZD6pfzVyufbdVP/exec';
+
+    // --- SELECCIÓN DE ELEMENTOS DEL DOM ---
+    const Fecha = document.getElementById('Fecha');
+    const Total = document.getElementById('Total');
+    const PorcItbis = document.getElementById('PorcItbis');
+    const Subtotal = document.getElementById('Subtotal');
+    const Itebis = document.getElementById('Itebis');
+    const MontoEfectivo = document.getElementById('MontoEfectivo');
+    const CantidadClientesEfectivo = document.getElementById('CantidadClientesEfectivo');
+    const EfectivoCajaMonto = document.getElementById('EfectivoCajaMonto');
+    const tarjetasContainer = document.getElementById('tarjetasContainer');
+    const addTarjetaBtn = document.getElementById('addTarjeta');
+    const MontoTransferencias = document.getElementById('MontoTransferencias');
+    const CantidadClientesTransferencia = document.getElementById('CantidadClientesTransferencia');
+    const bancosContainer = document.getElementById('bancosContainer');
+    const addBancoBtn = document.getElementById('addBanco');
+    const NotaCredito = document.getElementById('NotaCredito');
+    const CantidadNotasCredito = document.getElementById('CantidadNotasCredito');
+    const CuentaPorCobrar = document.getElementById('CuentaPorCobrar');
+    const CantidadClientesCuentaPorCobrar = document.getElementById('CantidadClientesCuentaPorCobrar');
+    const AbonoCuentaPorCobrar = document.getElementById('AbonoCuentaPorCobrar');
+    const Comision = document.getElementById('Comision');
+    const TotalCalculado = document.getElementById('TotalCalculado');
+    const Diferencia = document.getElementById('Diferencia');
+    const Estado = document.getElementById('Estado');
+    const ComentarioToggle = document.getElementById('ComentarioToggle');
+    const Comentario = document.getElementById('Comentario');
+    const guardarBtn = document.getElementById('guardarBtn');
+
+    // --- FUNCIONES DE UTILIDAD ---
+	
+async function cargarDatosConfiguracion() {
+  try {
+    const res = await fetch(CONFIG_URL);
+    const data = await res.json();
+
+    // 1. Guardar Bancos en la variable global
+    if (data.banco) {
+      listaBancosGlobal = data.banco;
+    }
+
+    // 2. Llenar selector de Sucursales
+    const selectSuc = document.getElementById('Sucursal');
+    if (data.sucursal && selectSuc) {
+      selectSuc.innerHTML = '<option value="">-- seleccionar sucursal --</option>';
+      data.sucursal.forEach(s => {
+        let opt = document.createElement('option');
+        opt.value = s.nombre;
+        opt.textContent = s.nombre;
+        selectSuc.appendChild(opt);
+      });
+    }
+
+    // 3. Llenar selector de Cuentas Contables
+    const selectCue = document.getElementById('NombreCuentaTipo');
+    if (data.cuenta && selectCue) {
+      selectCue.innerHTML = '<option value="">-- seleccionar cuenta --</option>';
+      data.cuenta.forEach(c => {
+        let opt = document.createElement('option');
+        opt.value = c.nombre_cuenta;
+        opt.textContent = c.nombre_cuenta;
+        selectCue.appendChild(opt);
+      });
+    }
+  } catch (e) {
+    console.error("Error cargando configuración:", e);
+  }
+}
+	
+    function setHoy() { 
+      const d = new Date(); 
+      Fecha.value = d.toISOString().slice(0, 10); 
+	  
+      cargarDatosConfiguracion();
+    }
+    
+    function formatRD(n) { 
+      return 'RD$ ' + Number(n || 0).toLocaleString('en-US', {
+        minimumFractionDigits: 2, 
+        maximumFractionDigits: 2
+      }); 
+    }
+    
+    function num(v) { 
+      return Number(String(v).replace(/[^0-9.-]/g, "")) || 0; 
+    }
+
+    function createTarjeta(monto = 0, porc = 2.5, clientes = 0) {
+  const div = document.createElement('div');
+  div.className = 'row tarjetaRow';
+
+  div.innerHTML = `
+    <div class="col">
+      <label>Monto</label>
+      <div class="input-rd">
+        <span class="currency">RD$</span>
+        <input type="number" class="tarMonto" step="0.01" min="0" value="${monto}">
+      </div>
+    </div>
+
+    <div class="col">
+      <label>% Com.</label>
+      <input type="number" class="tarPorc" step="0.01" min="0" value="${porc}">
+    </div>
+
+    <div class="col">
+      <label>Comisión</label>
+      <input type="text" class="tarCom" readonly value="${formatRD(0)}">
+    </div>
+
+    <div class="col">
+      <label>Clientes</label>
+      <input type="number" class="tarClientes" step="1" min="0" value="${clientes}">
+    </div>
+
+     <div class="col remove-col">
+  <button type="button" class="small-btn removeTar">
+    <i class="fa-solid fa-trash-can"></i> Eliminar
+  </button>
+   </div>
+  `;
+
+  tarjetasContainer.appendChild(div);
+
+  const montoEl = div.querySelector('.tarMonto');
+  const porcEl = div.querySelector('.tarPorc');
+  const comEl = div.querySelector('.tarCom');
+  const remove = div.querySelector('.removeTar');
+
+  function actualizar() {
+    const m = num(montoEl.value);
+    const p = num(porcEl.value);
+    comEl.value = formatRD(m * (p / 100));
+    recalcular();
+  }
+
+  montoEl.addEventListener('input', actualizar);
+  porcEl.addEventListener('input', actualizar);
+  remove.addEventListener('click', () => { div.remove(); recalcular(); });
+
+  actualizar();   
+  }
+  
+function createBanco(nombreSeleccionado = '', monto = 0, clientes = 0) {
+
+  if (!bancosContainer) {
+    console.error("bancosContainer no existe en el DOM");
+    return;
+  }
+
+  const div = document.createElement('div');
+  div.className = 'bancoRow'; // quitamos 'row' para evitar conflictos CSS
+
+  // Generar opciones
+  let opcionesBancos = '<option value="">-- seleccionar --</option>';
+
+  if (Array.isArray(listaBancosGlobal) && listaBancosGlobal.length > 0) {
+
+    opcionesBancos += listaBancosGlobal.map(b => {
+
+      const nombre = b.banco_nombre ?? '';
+      const selected = nombre === nombreSeleccionado ? 'selected' : '';
+
+      return `<option value="${nombre}" ${selected}>${nombre}</option>`;
+
+    }).join('');
+  }
+
+  div.innerHTML = `
+    <div class="col">
+      <label>Banco</label>
+      <select class="banNombre" required>
+        ${opcionesBancos}
+      </select>
+    </div>
+
+    <div class="col">
+      <label>Monto</label>
+      <div class="input-rd">
+        <span class="currency">RD$</span>
+        <input type="number" class="banMonto" step="0.01" min="0" value="${Number(monto) || 0}">
+      </div>
+    </div>
+
+    <div class="col">
+      <label>Clientes</label>
+      <input type="number" class="banClientes" step="1" min="0" value="${Number(clientes) || 0}">
+    </div>
+
+    <div class="col remove-col">
+      <button type="button" class="small-btn removeBan">
+        <i class="fa-solid fa-trash-can"></i> Eliminar
+      </button>
+    </div>
+  `;
+
+  bancosContainer.appendChild(div);
+
+  // Obtener elementos una sola vez
+  const banNombre = div.querySelector('.banNombre');
+  const banMonto = div.querySelector('.banMonto');
+  const banClientes = div.querySelector('.banClientes');
+  const removeBtn = div.querySelector('.removeBan');
+
+  // Eventos
+  banNombre.addEventListener('change', recalcular);
+  banMonto.addEventListener('input', recalcular);
+  banClientes.addEventListener('input', recalcular);
+
+  removeBtn.addEventListener('click', () => {
+    div.remove();
+    recalcular();
+  });
+
+  recalcular();
+}
+
+    // --- LÓGICA DE CÁLCULO Y VALIDACIÓN ---
+    function recalcular() {
+      const venta = num(Total.value);
+      const porc = num(PorcItbis.value);
+      const itbis = venta * (porc / (100 + porc));
+      const subtotal = venta - itbis;
+
+      Subtotal.value = formatRD(subtotal);
+      Itebis.value = formatRD(itbis);
+
+      const efectivo = num(MontoEfectivo.value);
+      if (EfectivoCajaMonto) {
+       EfectivoCajaMonto.value = formatRD(efectivo);
+       }
+
+      // Sumar tarjetas y sus comisiones
+      let sumaTar = 0, sumaCom = 0, sumaCliTar = 0;
+      document.querySelectorAll('.tarjetaRow').forEach(r => {
+        const m = num(r.querySelector('.tarMonto').value);
+        const p = num(r.querySelector('.tarPorc').value);
+        sumaTar += m;
+        sumaCom += m * (p / 100);
+        sumaCliTar += parseInt(r.querySelector('.tarClientes').value || 0);
+      });
+
+      // Sumar bancos (detalle de transferencias)
+      const montoTransfGlobal = num(MontoTransferencias.value);
+      const cliTransfGlobal = parseInt(CantidadClientesTransferencia.value || 0);
+      let sumaBancos = 0, sumaCliBancos = 0;
+      document.querySelectorAll('.bancoRow').forEach(r => {
+        sumaBancos += num(r.querySelector('.banMonto').value);
+        sumaCliBancos += parseInt(r.querySelector('.banClientes').value || 0);
+      });
+
+      const nota = num(NotaCredito.value);
+      const cpc = num(CuentaPorCobrar.value);
+      const abono = num(AbonoCuentaPorCobrar.value);
+
+      // Totalización
+      const totalCalc = efectivo + sumaTar + montoTransfGlobal + cpc + abono + nota;
+      TotalCalculado.value = formatRD(totalCalc);
+      Comision.value = formatRD(sumaCom);
+
+      const diferencia = venta - totalCalc;
+      Diferencia.value = formatRD(diferencia);
+
+      // Validaciones para habilitar botón
+      const tolerancia = 0.05;
+
+const cuadraCaja = Math.abs(diferencia) <= tolerancia;
+const cuadraBancos = Math.abs(sumaBancos - montoTransfGlobal) <= tolerancia;
+const cuadraClientesBancos = sumaCliBancos === cliTransfGlobal;
+const ventaValida = venta > 0;
+
+if (cuadraCaja && cuadraBancos && cuadraClientesBancos && ventaValida) {
+
+  Estado.innerHTML = `
+    <strong>Estado: CIERRE CUADRADO ✅</strong>
+    <small>Todo coincide correctamente.</small>
+  `;
+
+  Estado.classList.remove("error");
+  Estado.classList.add("ok");
+
+  guardarBtn.disabled = false;
+  guardarBtn.classList.add("activo");
+  guardarBtn.classList.remove("error-borde");
+
+} else {
+
+  let detalles = [];
+
+  if (!ventaValida)
+    detalles.push("El monto total de venta debe ser mayor a 0.");
+
+  if (!cuadraCaja)
+    detalles.push(`Diferencia en caja: ${formatRD(diferencia)}`);
+
+  if (!cuadraBancos)
+    detalles.push(`Detalle bancos (${formatRD(sumaBancos)}) ≠ Transferencia (${formatRD(montoTransfGlobal)})`);
+
+  if (!cuadraClientesBancos)
+    detalles.push(`Clientes bancos (${sumaCliBancos}) ≠ Transferencia (${cliTransfGlobal})`);
+
+  Estado.innerHTML = `
+    <strong>Estado: CIERRE INCOMPLETO O NO CUADRA ⚠️</strong>
+    <small>${detalles.join("<br>")}</small>
+  `;
+
+  Estado.classList.remove("ok");
+  Estado.classList.add("error");
+
+  guardarBtn.disabled = true;
+  guardarBtn.classList.remove("activo");
+  guardarBtn.classList.add("error-borde");
+}
+    }
+
+    // --- EVENTOS INICIALES ---
+    setHoy();
+    addTarjetaBtn.addEventListener('click', () => createTarjeta());
+    addBancoBtn.addEventListener('click', () => createBanco());
+    
+    // Crear filas iniciales
+    createTarjeta();
+    createBanco('Banreservas');
+
+    [Total, PorcItbis, MontoEfectivo, CantidadClientesEfectivo, MontoTransferencias, CantidadClientesTransferencia, NotaCredito, CantidadNotasCredito, CuentaPorCobrar, CantidadClientesCuentaPorCobrar, AbonoCuentaPorCobrar].forEach(el => {
+      el.addEventListener('input', recalcular);
+    });
+
+    ComentarioToggle.addEventListener('change', () => { 
+      Comentario.style.display = ComentarioToggle.checked ? 'block' : 'none'; 
+      if (!ComentarioToggle.checked) Comentario.value = ''; 
+    });
+	
+	Comentario.addEventListener('input', () => {
+	Comentario.style.height = 'auto'; 
+	Comentario.style.height = Comentario.scrollHeight + 'px';
+	});
+
+    // --- ENVÍO DE DATOS (SUBMIT) ---
+    document.getElementById('cierreForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      recalcular();
+      if (guardarBtn.disabled) return;
+
+      guardarBtn.disabled = true;
+      guardarBtn.textContent = 'Guardando en Google Sheets...';
+
+      const params = new URLSearchParams();
+      params.append('action', 'ejecutarRegistro');
+      params.append('fecha', Fecha.value);
+      params.append('cuentaContable', document.getElementById('NombreCuentaTipo').value);
+      params.append('descripcion', document.getElementById('Descripcion').value);
+      params.append('sucursal', document.getElementById('Sucursal').value);
+      params.append('total', num(Total.value));
+      params.append('itbis', num(Itebis.value));
+      params.append('subtotal', num(Subtotal.value));
+      params.append('comision', num(Comision.value));
+      params.append('montoEfectivo', num(MontoEfectivo.value));
+      params.append('cantidadClientesEfectivo', CantidadClientesEfectivo.value);
+
+      // Recopilar totales de tarjetas para el .gs
+      let sumaTar = 0, cliTar = 0;
+      document.querySelectorAll('.tarjetaRow').forEach(r => {
+        sumaTar += num(r.querySelector('.tarMonto').value);
+        cliTar += parseInt(r.querySelector('.tarClientes').value || 0);
+      });
+      params.append('montoTarjeta', sumaTar);
+      params.append('cantidadClientesTarjeta', cliTar);
+
+      params.append('montoTransferencias', num(MontoTransferencias.value));
+      params.append('cantidadClientesTransferencia', CantidadClientesTransferencia.value);
+
+      // Desglosar bancos para columnas específicas
+      let pop = 0, res = 0, bhd = 0, cpop = 0, cres = 0, cbhd = 0;
+      document.querySelectorAll('.bancoRow').forEach(r => {
+        const n = r.querySelector('.banNombre').value;
+        const m = num(r.querySelector('.banMonto').value);
+        const c = parseInt(r.querySelector('.banClientes').value || 0);
+        if (n === 'Popular') { pop += m; cpop += c; }
+        else if (n === 'Banreservas') { res += m; cres += c; }
+        else if (n === 'BHD') { bhd += m; cbhd += c; }
+      });
+      
+      params.append('bancoPopular', pop);
+      params.append('Clientes Banco Popular', cpop);
+      params.append('banreservas', res);
+      params.append('Clientes Banreservas', cres);
+      params.append('bhd', bhd);
+      params.append('Clientes BHD', cbhd);
+      params.append('Nota de crédito', num(NotaCredito.value));
+      params.append('Cantidad de notas de créditos', CantidadNotasCredito.value);
+      params.append('Cuenta por Cobrar', num(CuentaPorCobrar.value));
+      params.append('cantidad clientes cuenta por cobrar', CantidadClientesCuentaPorCobrar.value);
+      params.append('Abono Cuenta por Cobrar (Cobros)', num(AbonoCuentaPorCobrar.value));
+      params.append('comentario', Comentario.value);
+
+      try {
+        const resp = await fetch(WEB_APP_URL, {
+          method: 'POST',
+          body: params.toString(),
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+        });
+
+        const result = await resp.json();
+        if (result.status === 'ok') {
+          alert('✅ Cierre registrado con éxito en la base de datos.');
+          location.reload();
+        } else {
+          alert('❌ Error: ' + result.message);
+        }
+      } catch (err) {
+        console.error(err);
+        alert('⚠️ Hubo un problema con la respuesta del servidor, pero es posible que los datos se hayan enviado. Por favor, verifica la hoja de cálculo.');
+      } finally {
+        guardarBtn.disabled = false;
+        guardarBtn.textContent = 'GUARDAR CIERRE';
+      }
+    });
+  })();
+</script>
+ 
+  <script src="script.js"></script>
+</body>
+</html>

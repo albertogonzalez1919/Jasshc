@@ -1,0 +1,900 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+  <title>Gestión CxP</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+</head>
+<body>
+
+<header class="header" id="main-header"></header>
+
+    <div class="page-wrapper">
+    <main class="main-content">
+	<div class="top-bar">
+  <h1>Gestión de Cuentas X Pagar</h1>
+  </div>
+<div class="card visible">
+  <details> <summary>FORMULARIO PARA REGISTRAR CXP</summary>
+    
+    <form id="formAddCXP" onsubmit="event.preventDefault(); onAddCXP()">
+      <div class="row">
+<div class="col">
+  <label>Sucursal *</label>
+  <select id="add_sucursal" required>
+    <option value="">Cargando sucursales...</option>
+  </select>
+</div>
+      </div>
+
+      <div class="row" style="margin-top:8px">
+<div class="col">
+  <label>Proveedor *</label>
+  <select id="add_proveedor_select" name="proveedor" required>
+    <option value="">Cargando proveedores...</option>
+  </select>
+</div>
+        <div class="col">
+          <label>Número de factura *</label>
+          <input id="add_numfact" type="text" placeholder="Ej: A-101" required />
+        </div>
+        <div class="col">
+          <label>Fecha de factura *</label>
+          <input id="add_fecha_fact" type="date" required />
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:8px">
+        <div class="col">
+          <label>Fecha de vencimiento *</label>
+          <input id="add_fecha_venc" type="date" required />
+        </div>
+        <div class="col">
+          <label>Subtotal *</label>
+          <input id="add_subtotal" type="number" step="0.01" placeholder="0.00" required />
+        </div>
+        <div class="col">
+          <label>ITBIS (si aplica)</label>
+          <input id="add_itbis" type="number" step="0.01" placeholder="0.00" />
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:8px">
+        <div class="col">
+          <label>Total factura *</label>
+          <input id="add_total" type="number" step="0.01" placeholder="0.00" required />
+        </div>
+        <div class="col">
+          <label>NCF (si tiene)</label>
+          <input id="add_ncf" type="text" placeholder="B01..." />
+        </div>
+        <div class="col">
+          <label>RNC (obligatorio si NCF)</label>
+          <input id="add_rnc" type="text" placeholder="131..." />
+        </div>
+      </div>
+
+      <div style="margin-top:15px" class="controls">
+        <button type="submit" class="btn-primary">Registrar CxP</button>
+        <div id="addCXP_msg" class="muted"></div>
+      </div>
+    </form>
+  </details>
+</div>
+
+<div class="card visible">
+  <details>
+    <summary>FORMULARIO PARA REGISTRAR ABONO CXP</summary>
+    <form id="formAbono" onsubmit="event.preventDefault(); onRegisterAbono()">
+      <div class="row">
+        <div class="col">
+          <label>Número de factura *</label>
+          <input id="abono_numfact" type="text" required />
+        </div>
+        <div class="col">
+          <label>Proveedor (opcional)</label>
+          <input id="abono_proveedor" type="text" />
+        </div>
+        <div class="col" style="align-self:flex-end">
+          <button type="button" onclick="onBuscarFacturaAbono()">Buscar factura</button>
+          <span id="buscar_fact_msg" class="muted" style="margin-left:8px"></span>
+        </div>
+      </div>
+
+      <div id="abono_info" style="display:none;margin-top:8px">
+        <div class="row">
+          <div class="col">
+            <label>Saldo pendiente</label>
+            <input id="abono_pendiente" type="text" disabled />
+          </div>
+          <div class="col">
+            <label>Monto a abonar *</label>
+            <input id="abono_amount" type="number" step="0.01" />
+          </div>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <div class="col">
+            <label>Sucursal (Origen de fondos) *</label>
+            <select id="abono_sucursal" required>
+              <option value="">Cargando sucursales...</option>
+            </select>
+          </div>
+          <div class="col">
+            <label>Cuenta de salida *</label>
+            <select id="abono_origin">
+              <option value="Monto en efectivo">Monto en efectivo</option>
+              <option value="Banco Popular (Monto)">Banco Popular (Monto)</option>
+              <option value="Banreservas (Monto)">Banreservas (Monto)</option>
+              <option value="BHD (Monto)">BHD (Monto)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-top:10px" class="controls">
+          <button type="submit">Registrar abono</button>
+          <div id="abono_msg" class="muted"></div>
+        </div>
+      </div>
+    </form>
+  </details>
+</div>
+
+<div class="card visible">
+  <details>
+    <summary>FORMULARIO SALDAR CXP</summary>
+    <form id="formSaldar" onsubmit="event.preventDefault(); onSaldar()">
+      <div class="row">
+        <div class="col">
+          <label>Número de factura *</label>
+          <input id="saldar_numfact" type="text" required />
+        </div>
+        <div class="col">
+          <label>Proveedor (opcional)</label>
+          <input id="saldar_proveedor" type="text" />
+        </div>
+        <div class="col" style="align-self:flex-end">
+          <button type="button" onclick="onBuscarFacturaSaldar()">Buscar factura</button>
+          <span id="buscar_saldar_msg" class="muted" style="margin-left:8px"></span>
+        </div>
+      </div>
+
+      <div id="saldar_info" style="display:none;margin-top:8px">
+        <div class="row">
+          <div class="col">
+            <label>Saldo pendiente</label>
+            <input id="saldar_pendiente" type="text" disabled />
+          </div>
+          <div class="col">
+            <label>Monto a pagar (vacío = todo)</label>
+            <input id="saldar_amount" type="number" step="0.01" />
+          </div>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <div class="col">
+            <label>Sucursal (Origen de fondos) *</label>
+            <select id="saldar_sucursal" required>
+              <option value="">Cargando sucursales...</option>
+            </select>
+          </div>
+          <div class="col">
+            <label>Cuenta de salida *</label>
+            <select id="saldar_origin">
+              <option value="Monto en efectivo">Monto en efectivo</option>
+              <option value="Banco Popular (Monto)">Banco Popular (Monto)</option>
+              <option value="Banreservas (Monto)">Banreservas (Monto)</option>
+              <option value="BHD (Monto)">BHD (Monto)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-top:10px" class="controls">
+          <button type="submit">Saldar factura</button>
+          <div id="saldar_msg" class="muted"></div>
+        </div>
+      </div>
+    </form>
+  </details>
+</div>
+   
+<div class="card visible">
+  <details>
+    <summary>FORMULARIO EDITAR CXP</summary>
+
+    <form id="formEdit" onsubmit="event.preventDefault(); onEditCXP()">
+      <div class="row">
+        <div class="col">
+          <label>Número de factura *</label>
+          <input id="edit_numfact" type="text" required />
+        </div>
+        <div class="col">
+          <label>Proveedor (opcional)</label>
+          <input id="edit_proveedor" type="text" />
+        </div>
+        <div class="col" style="align-self:flex-end">
+          <button type="button" onclick="onBuscarFacturaEdit()">Buscar factura</button>
+          <span id="buscar_edit_msg" class="muted" style="margin-left:8px"></span>
+        </div>
+      </div>
+
+      <div id="edit_info" style="display:none;margin-top:8px">
+        <div class="row">
+          <div class="col">
+            <label>Subtotal</label>
+            <input id="edit_subtotal" type="number" step="0.01" />
+          </div>
+          <div class="col">
+            <label>ITBIS de compras y gastos</label>
+            <input id="edit_itbis" type="number" step="0.01" />
+          </div>
+          <div class="col">
+            <label>Total factura</label>
+            <input id="edit_total" type="number" step="0.01" />
+          </div>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <div class="col">
+            <label>NCF</label>
+            <input id="edit_ncf" type="text" />
+          </div>
+          <div class="col">
+            <label>RNC</label>
+            <input id="edit_rnc" type="text" />
+          </div>
+          <div class="col">
+            <label>Fecha vencimiento</label>
+            <input id="edit_fecha_venc" type="date" />
+          </div>
+        </div>
+
+        <div style="margin-top:10px" class="controls">
+          <button type="submit">Guardar cambios</button>
+          <div id="edit_msg" class="muted"></div>
+        </div>
+      </div>
+    </form>
+  </details>
+   </div>
+  
+<div class="card visible">
+ <section class="card-section">
+
+  <h2 class="section-title">
+    Filtrar CxP (mes / año / estado)
+  </h2>
+
+  <div class="form-grid">
+    <div class="field">
+      <label>Mes</label>
+      <select id="filter_month">
+        <option value="">-- Todos --</option>
+        <option value="1">Enero</option>
+        <option value="2">Febrero</option>
+        <option value="3">Marzo</option>
+        <option value="4">Abril</option>
+        <option value="5">Mayo</option>
+        <option value="6">Junio</option>
+        <option value="7">Julio</option>
+        <option value="8">Agosto</option>
+        <option value="9">Septiembre</option>
+        <option value="10">Octubre</option>
+        <option value="11">Noviembre</option>
+        <option value="12">Diciembre</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Año</label>
+      <select id="filter_year"></select>
+    </div>
+
+    <div class="field">
+      <label>Estado</label>
+      <select id="filter_estado">
+        <option value="">-- Todos --</option>
+        <option value="Pendiente">Pendiente</option>
+        <option value="Parcial">Parcial</option>
+        <option value="Saldada">Saldada</option>
+        <option value="Vencida">Vencida</option>
+      </select>
+    </div>
+
+  </div>
+  <div class="controls">
+    <button onclick="onFilter()" class="btn btn-primary">Filtrar</button>
+    <button onclick="downloadCSV()" class="btn btn-secondary">Descargar CSV</button>
+    <button onclick="downloadPDF()" class="btn btn-danger">Descargar PDF</button>
+    <div id="filter_msg" class="muted"></div>
+  </div>
+
+</section>
+
+<div id="printableArea" class="report-print">
+  <div class="report-header">
+    <h2>Reporte de Cuentas por Pagar</h2>
+    <p id="pdf-date"></p>
+  </div>
+
+  <div class="table-scroll-container">
+    <div id="results" class="resultBox"></div>
+  </div>
+  <div class="summary-card">
+    <table class="summary-table">
+      <thead>
+        <tr>
+          <th>Registros</th>
+          <th>Total Facturado</th>
+          <th>Total Abonado</th>
+          <th class="highlight">Pendiente Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td id="summary-count">0</td>
+          <td id="summary-total-factura">RD$ 0.00</td>
+          <td id="summary-total-abonado" class="success">RD$ 0.00</td>
+          <td id="summary-pendiente" class="danger">RD$ 0.00</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  </div>
+
+</section>
+</div>
+ </div>
+ 
+   </main>
+   </div>
+
+<script>
+  if (sessionStorage.getItem('session_active') !== 'true') {
+      window.location.href = 'login.html';
+  }
+
+    // ==== URL DE TU WEB APP ====
+    const API_URL = "https://script.google.com/macros/s/AKfycbxZkW58Wm6Gj7zCakLOY5QiMH8UZMY9HQTFR-94ulDK0NPlIPzZ1f0vb9Fv_xS1whRH/exec";
+	
+	const CONFIG_URL = 'https://script.google.com/macros/s/AKfycbxtFBNhe3YuVv0dZ65aw1l8HBC1pSUj5wCCq8WMAH4k0mqOSJ-dWqZD6pfzVyufbdVP/exec';
+
+    var lastResults = []; // Variable global para almacenar resultados de la tabla
+
+    // ---------- Utilidades ----------
+    async function postToApi(action, body = {}) {
+      const payload = Object.assign({}, body, { action: action });
+      const res = await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify(payload)
+      });
+      return await res.json();
+    }
+
+    function q(id){ return document.getElementById(id); }
+    function fmt(n){ return Number(n||0).toFixed(2); }
+    
+    function setMsg(id, txt, kind) {
+      const el = q(id);
+      el.textContent = txt || "";
+      el.className = kind ? kind : "muted";
+    }
+
+    function formatCurrency(v) {
+      let n = Number(v);
+      if (isNaN(n)) return "RD$ 0.00";
+      return 'RD$ ' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    // ---------- Inicializar Años ----------
+    (function initYears() {
+        const yearSelect = document.getElementById('filter_year');
+        if(!yearSelect) return;
+        const currentYear = new Date().getFullYear();
+        
+        const optDefault = document.createElement('option');
+        optDefault.value = "";
+        optDefault.textContent = "-- Todos --";
+        yearSelect.appendChild(optDefault);
+        
+        for (let i = currentYear; i >= currentYear - 5; i--) {
+            const opt = document.createElement('option');
+            opt.value = i;
+            opt.textContent = i;
+            yearSelect.appendChild(opt);
+        }
+    })();
+
+
+async function cargarDatosConfiguracion() {
+    try {
+        const res = await fetch(CONFIG_URL);
+        const data = await res.json();
+        console.log("Datos cargados:", data); // Verifica esto en la consola
+
+        // --- SUCURSALES ---
+        const selectSuc = document.getElementById('add_sucursal');
+        if (data.sucursal && selectSuc) {
+            selectSuc.innerHTML = '<option value="">-- seleccionar sucursal --</option>';
+            data.sucursal.forEach(s => {
+                let opt = document.createElement('option');
+                opt.value = s.nombre;
+                opt.textContent = s.nombre;
+                selectSuc.appendChild(opt);
+            });
+        }
+
+        // --- PROVEEDORES (Mercancía) ---
+        // IMPORTANTE: Asegúrate de que el ID en tu HTML sea 'add_proveedor' (sin espacios)
+        const selectProv = document.getElementById('add_proveedor_select'); 
+        if (data.mercancia && selectProv) {
+            selectProv.innerHTML = '<option value="">-- seleccionar proveedor --</option>';
+            data.mercancia.forEach(p => {
+                let opt = document.createElement('option');
+                opt.value = p.nombre_mercancia;
+                opt.textContent = p.nombre_mercancia;
+                selectProv.appendChild(opt);
+            });
+        }
+    } catch (e) {
+        console.error("Error en carga dinámica:", e);
+    }
+}
+
+// LLAMADA CORRECTA AL CARGAR LA PÁGINA
+document.addEventListener('DOMContentLoaded', cargarDatosConfiguracion);
+
+
+    // ==========================================
+    // ---------- 1. REGISTRAR CXP --------------
+    // ==========================================
+async function onAddCXP() {
+  setMsg('addCXP_msg', 'Validando...');
+
+  const data = {
+    proveedor: q('add_proveedor').value.trim(),
+    numeroFactura: q('add_numfact').value.trim(),
+    fechaFactura: q('add_fecha_fact').value,
+    fechaVencimiento: q('add_fecha_venc').value,
+    subtotal: Number(q('add_subtotal').value || 0),
+    itbis: q('add_itbis').value ? Number(q('add_itbis').value) : 0,
+    total: Number(q('add_total').value || 0),
+    ncf: q('add_ncf').value.trim(),
+    rnc: q('add_rnc').value.trim(),
+    // Captura del nuevo selector de sucursal
+    sucursal: q('add_sucursal').value 
+  };
+
+  // Validación: Agregamos data.sucursal a los campos obligatorios
+  if (!data.proveedor || !data.numeroFactura || !data.fechaFactura || 
+      !data.fechaVencimiento || !data.subtotal || !data.total || !data.sucursal) {
+    setMsg('addCXP_msg', 'Complete todos los campos obligatorios (*), incluyendo la sucursal', 'error');
+    return;
+  }
+
+  if (data.ncf && !data.rnc) {
+    setMsg('addCXP_msg', 'Si indica NCF, es obligatorio indicar RNC', 'error');
+    return;
+  }
+
+  setMsg('addCXP_msg', 'Guardando...');
+
+  try {
+    const res = await postToApi('registrarCXP', data);
+    if (res && res.success) {
+      setMsg('addCXP_msg', 'CxP registrada ✓', 'success');
+      q('formAddCXP').reset();
+      
+      // Opcional: Recargar selectores si es necesario tras el reset
+      cargarSelectoresSucursales(); 
+      
+    } else {
+      setMsg('addCXP_msg', res && res.error ? 'Error: ' + res.error : 'Error', 'error');
+    }
+  } catch (e) {
+    setMsg('addCXP_msg', 'Error: ' + (e.message || e), 'error');
+  }
+}
+    // ==========================================
+    // ---------- 2. REGISTRAR ABONO ------------
+    // ==========================================
+	
+async function onRegisterAbono() {
+  const numFact = q('abono_numfact').value;
+  const monto = q('abono_amount').value;
+  const origen = q('abono_origin').value;
+  const sucursal = q('abono_sucursal').value; // Captura sucursal
+  const proveedor = q('abono_proveedor').value;
+
+  if (!sucursal) { alert("Debe elegir la sucursal de donde saldrá el dinero."); return; }
+  if (!monto || monto <= 0) { alert("Ingrese un monto válido."); return; }
+
+  setMsg('abono_msg', 'Registrando abono...');
+  try {
+    const res = await postToApi('registrarAbono', {
+      numeroFactura: numFact,
+      proveedor: proveedor,
+      monto: monto,
+      origenFondos: origen,
+      sucursal: sucursal // Se envía a la API
+    });
+
+    if (res.success) {
+      alert("Abono registrado correctamente.");
+      location.reload();
+    } else {
+      setMsg('abono_msg', res.error, 'error');
+    }
+  } catch (e) {
+    setMsg('abono_msg', 'Error al conectar con el servidor', 'error');
+  }
+}
+
+     async function onBuscarFacturaAbono() {
+      const numFact = q('abono_numfact').value.trim();
+      const proveedor = q('abono_proveedor').value.trim();
+      const msgEl = q('buscar_fact_msg');
+      const infoDiv = q('abono_info');
+
+      if (!numFact) {
+        alert("Por favor, ingrese el número de factura para el abono.");
+        return;
+      }
+
+      msgEl.innerText = "Buscando...";
+      infoDiv.style.display = "none"; 
+
+      try {
+        const res = await postToApi('buscarFactura', { numeroFactura: numFact, proveedor: proveedor });
+
+        if (res && res.success) {
+          const f = Array.isArray(res.data) ? res.data[0] : res.data;
+          if (!f) {
+            msgEl.innerText = "No encontrada.";
+            return;
+          }
+          q('abono_pendiente').value = formatCurrency(f["PENDIENTE X PAGAR"] || 0);
+          infoDiv.style.display = "block";
+          msgEl.innerText = "Factura cargada ✓";
+        } else {
+          msgEl.innerText = "No encontrada";
+          alert(res.error || "Factura no encontrada");
+        }
+      } catch (e) {
+        console.error(e);
+        msgEl.innerText = "Error de conexión";
+      }
+    }
+
+    
+    // ==========================================
+    // ---------- 3. SALDAR FACTURA -------------
+    // ==========================================
+	
+	// --- SALDAR FACTURA ACTUALIZADO ---
+async function onSaldar() {
+  const numFact = q('saldar_numfact').value.trim();
+  const montoManual = q('saldar_amount').value;
+  const origen = q('saldar_origin').value;
+  const sucursal = q('saldar_sucursal').value; // Captura sucursal
+
+  if (!numFact) { setMsg('saldar_msg','Factura requerida','error'); return; }
+  if (!sucursal) { alert("Debe elegir la sucursal de donde saldrá el dinero."); return; }
+
+  setMsg('saldar_msg', 'Procesando pago...');
+  
+  // Si no hay monto manual, se asume pago total (saldarCXP)
+  const accion = montoManual ? 'registrarAbono' : 'saldarCXP';
+  
+  try {
+    const res = await postToApi(accion, {
+      numeroFactura: numFact,
+      monto: montoManual,
+      origenFondos: origen,
+      sucursal: sucursal // Se envía a la API
+    });
+
+    if (res.success) {
+      alert("¡Pago registrado con éxito!");
+      location.reload();
+    } else {
+      setMsg('saldar_msg', res.error, 'error');
+    }
+  } catch (e) {
+    setMsg('saldar_msg', 'Error al procesar', 'error');
+  }
+}
+	
+    async function onBuscarFacturaSaldar() {
+      const numFact = q('saldar_numfact').value.trim();
+      const proveedor = q('saldar_proveedor').value.trim();
+      const msgEl = q('buscar_saldar_msg');
+      const infoDiv = q('saldar_info');
+
+      if (!numFact) {
+        alert("Por favor, ingrese el número de factura.");
+        return;
+      }
+
+      msgEl.innerText = "Buscando...";
+      infoDiv.style.display = "none"; 
+
+      try {
+        const res = await postToApi('buscarFactura', { numeroFactura: numFact, proveedor: proveedor });
+
+        if (res && res.success) {
+          const f = Array.isArray(res.data) ? res.data[0] : res.data;
+          if (!f) {
+            msgEl.innerText = "No encontrada.";
+            return;
+          }
+
+          q('saldar_pendiente').value = formatCurrency(f["PENDIENTE X PAGAR"] || 0);
+          infoDiv.style.display = "block";
+          msgEl.innerText = "Factura cargada ✓";
+
+          lastResults = [f];
+          renderResults(lastResults);
+          renderSummary(1, f["MONTO"], f["TOTAL ABONADO"], f["PENDIENTE X PAGAR"]);
+        } else {
+          msgEl.innerText = "Error: " + (res.error || "No encontrada");
+          alert(res.error || "Factura no encontrada");
+        }
+      } catch (e) {
+        console.error(e);
+        msgEl.innerText = "Error de conexión";
+      }
+    }
+
+    
+    // ==========================================
+    // ---------- 4. EDITAR CXP -----------------
+    // ==========================================
+    async function onBuscarFacturaEdit() {
+      const numFact = q('edit_numfact').value.trim();
+      const proveedor = q('edit_proveedor').value.trim();
+      const msgEl = q('buscar_edit_msg');
+      const infoDiv = q('edit_info');
+
+      if (!numFact) return alert("Ingrese el número de factura.");
+
+      msgEl.innerText = "Buscando...";
+      infoDiv.style.display = "none";
+
+      try {
+        const res = await postToApi('buscarFactura', { numeroFactura: numFact, proveedor: proveedor });
+
+        if (res && res.success) {
+          const f = Array.isArray(res.data) ? res.data[0] : res.data;
+          if (!f) {
+            msgEl.innerText = "No encontrada.";
+            return;
+          }
+
+          q('edit_total').value = f["MONTO"] || 0;
+          q('edit_ncf').value = f["NFC"] || f["NCF"] || ""; // Ajuste por si el GS devuelve NFC o NCF
+          q('edit_subtotal').value = f["SUBTOTAL"] || ""; 
+          q('edit_itbis').value = f["ITBIS"] || "";
+          q('edit_rnc').value = f["RNC"] || "";
+
+          // Convertir fecha dd-mm-yyyy a yyyy-mm-dd (Ojo con los dobles espacios en "FECHA  VENCIMIENTO" si aplica)
+          const fechaKey = f["FECHA  VENCIMIENTO"] !== undefined ? "FECHA  VENCIMIENTO" : "FECHA VENCIMIENTO";
+          if (f[fechaKey]) {
+            const partes = f[fechaKey].split("-");
+            if (partes.length === 3) {
+              // Asumiendo DD-MM-YYYY
+              q('edit_fecha_venc').value = `${partes[2]}-${partes[1]}-${partes[0]}`;
+            }
+          }
+
+          infoDiv.style.display = "block";
+          msgEl.innerText = "Factura lista para editar ✓";
+
+        } else {
+          msgEl.innerText = "No encontrada";
+          alert(res.error || "Factura no encontrada");
+        }
+      } catch (e) {
+        console.error(e);
+        msgEl.innerText = "Error de conexión";
+      }
+    }
+
+    async function onEditCXP(){
+      const invoice = q('edit_numfact').value.trim();
+      if (!invoice) { setMsg('edit_msg','Introduce número de factura','error'); return; }
+      
+      const updates = {
+        subtotal: q('edit_subtotal').value ? Number(q('edit_subtotal').value) : 0,
+        itbis: q('edit_itbis').value ? Number(q('edit_itbis').value) : 0,
+        total: q('edit_total').value ? Number(q('edit_total').value) : 0,
+        ncf: q('edit_ncf').value.trim(),
+        rnc: q('edit_rnc').value.trim(),
+        fechaVencimiento: q('edit_fecha_venc').value || undefined
+      };
+      
+      if (updates.ncf && !updates.rnc) { setMsg('edit_msg','Si añade NCF debe indicar RNC','error'); return; }
+      
+      setMsg('edit_msg','Guardando...');
+      try {
+        const res = await postToApi('editarCXP', Object.assign({ numeroFactura: invoice }, updates));
+        if (res && res.success) {
+          setMsg('edit_msg','Editado correctamente ✓','success');
+        } else {
+          setMsg('edit_msg', res && res.message ? res.message : 'Error', 'error');
+        }
+      } catch (e) {
+        setMsg('edit_msg','Error: '+e, 'error');
+      }
+    }
+
+    // ==========================================
+    // ---------- 5. TABLA Y REPORTES -----------
+    // ==========================================
+    async function onFilter() {
+      setMsg('filter_msg', 'Filtrando datos...');
+      q('results').innerHTML = '<div class="muted">Cargando tabla...</div>';
+      
+      const mes = q('filter_month').value ? Number(q('filter_month').value) : undefined;
+      const anio = q('filter_year').value ? Number(q('filter_year').value) : undefined;
+      const estado = q('filter_estado').value || undefined;
+
+      if (q('pdf-date')) {
+        q('pdf-date').innerText = "Fecha de emisión: " + new Date().toLocaleDateString('es-DO');
+        q('pdf-date').style.display = "block";
+      }
+
+      try {
+        const res = await postToApi('filtrarCXP', { mes, anio, estado });
+
+        if (res && res.success) {
+          lastResults = (res.data || []).filter(r => {
+            const tieneMonto = Number(r["MONTO"] || 0) > 0;
+            const tieneAbono = Number(r["TOTAL ABONADO"] || 0) > 0;
+            const tienePendiente = Number(r["PENDIENTE X PAGAR"] || 0) > 0;
+            return (
+              r["MONTO"] !== undefined &&
+              r["TOTAL ABONADO"] !== undefined &&
+              r["PENDIENTE X PAGAR"] !== undefined &&
+              (tieneMonto || tieneAbono || tienePendiente)
+            );
+          });
+          
+          if (lastResults.length === 0) {
+            q('results').innerHTML = "<div class='muted'>No se encontraron registros para este filtro.</div>";
+            renderSummary(0, 0, 0, 0);
+            setMsg('filter_msg', '0 resultados encontrados');
+            return;
+          }
+
+          renderResults(lastResults);
+
+          let tFact = 0, tAbon = 0, tPend = 0;
+          lastResults.forEach(r => {
+            const parse = (val) => {
+              if (typeof val === 'number') return val;
+              let n = parseFloat(String(val || 0).replace(/[^0-9.-]+/g, ""));
+              return isNaN(n) ? 0 : n;
+            };
+
+            let m = parse(r['Total Factura'] || r['MONTO'] || r['TOTAL'] || r['monto'] || 0);
+            let a = parse(r['Total Abonado'] || r['TOTAL ABONADO'] || r['ABONADO'] || r['abonado'] || 0);
+            let p = r['PENDIENTE X PAGAR'] !== undefined ? parse(r['PENDIENTE X PAGAR']) : (m - a);
+
+            tFact += m;
+            tAbon += a;
+            tPend += p;
+          });
+
+          renderSummary(lastResults.length, tFact, tAbon, tPend);
+          setMsg('filter_msg', 'Resultados: ' + lastResults.length, 'success');
+
+        } else {
+          throw new Error(res.message || "La API no devolvió datos válidos.");
+        }
+      } catch (e) {
+        console.error("Error en onFilter:", e);
+        q('results').innerHTML = `<div class='error'>Error al filtrar: ${e.message || e}</div>`;
+        renderSummary(0, 0, 0, 0);
+        setMsg('filter_msg', 'Error de conexión', 'error');
+      }
+    }
+
+    function renderSummary(count, total, abonado, pendiente) {
+      q('summary-count').innerText = count;
+      q('summary-total-factura').innerText = formatCurrency(total);
+      q('summary-total-abonado').innerText = formatCurrency(abonado);
+      q('summary-pendiente').innerText = formatCurrency(pendiente);
+    }
+
+    function renderResults(rows) {
+  const resultsDiv = q('results');
+  if (!rows || rows.length === 0) {
+    resultsDiv.innerHTML = "<div class='muted'>No se encontraron registros para los filtros seleccionados.</div>";
+    return;
+  }
+
+  const headers = Object.keys(rows[0]);
+  let html = "<table><thead><tr>";
+  headers.forEach(h => { html += `<th>${h.toUpperCase()}</th>`; });
+  html += "</tr></thead><tbody>";
+
+  rows.forEach(r => {
+    html += "<tr>";
+    headers.forEach(h => {
+      let value = (r[h] !== undefined && r[h] !== null) ? r[h] : "";
+      const hUpper = h.toUpperCase();
+
+      const esDinero = /TOTAL|MONTO|ABONADO|PENDIENTE|SUBTOTAL|ITBIS|PAGAR|PAGO/i.test(hUpper);
+      const esVencida = /VENCIDA|DIAS|ATRASO/i.test(hUpper);
+      const esEstado = hUpper === "ESTADO"; // Detectamos la columna de estado
+
+      if (esEstado) {
+        // Lógica de colores para el estado
+        let statusClass = "";
+        const valUpper = String(value).toUpperCase();
+        
+        if (valUpper.includes("PENDIENTE")) statusClass = "status-pendiente";
+        else if (valUpper.includes("PARCIAL")) statusClass = "status-parcial";
+        else if (valUpper.includes("SALDADA")) statusClass = "status-saldada";
+        
+        html += `<td class="text-center"><span class="${statusClass}">${value}</span></td>`;
+      } 
+      else if (esDinero && value !== "") {
+        html += `<td class="num">${formatCurrency(value)}</td>`;
+      } 
+      else if (esVencida) {
+        html += `<td class="text-center" style="font-weight: bold;">${value}</td>`;
+      } 
+      else {
+        html += `<td>${value}</td>`;
+      }
+    });
+    html += "</tr>";
+  });
+
+  html += "</tbody></table>";
+  resultsDiv.innerHTML = html;
+}
+
+    function downloadCSV(){
+      if (!lastResults || lastResults.length === 0) { alert("No hay datos para descargar."); return; }
+      const headers = Object.keys(lastResults[0]);
+      const rows = lastResults.map(r => headers.map(h => JSON.stringify(r[h] !== undefined ? String(r[h]) : "") ));
+      let csv = headers.join(",") + "\n";
+      rows.forEach(r => csv += r.join(",") + "\n");
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'cxp_filtro.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+    
+    function downloadPDF(){
+      const element = document.getElementById('printableArea');
+      if(!element || element.innerText.trim() === "" || lastResults.length === 0) {
+           alert("No hay datos para generar el PDF. Filtre primero.");
+           return;
+      }
+      
+      var opt = {
+        margin:       [0.3, 0.3], 
+        filename:     'reporte_cxp.pdf',
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, logging: false, scrollY: 0, scrollX: 0, useCORS: true },
+        jsPDF:        { unit: 'in', format: 'letter', orientation: 'landscape' },
+        pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] } 
+      };
+
+      html2pdf().set(opt).from(element).save();
+    }
+  </script>
+
+<script src="script.js"></script>
+  <hr style="margin-top:20px" />
+</body>
+</html>

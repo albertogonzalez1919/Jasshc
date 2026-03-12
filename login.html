@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <title>Login | Jass HC</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+<header class="header" id="main-header"></header>
+
+<div class="login-container">
+    <div id="loader" class="loading-overlay" style="display:none">⌛ Validando credenciales...</div>
+    
+    <div class="login-card">
+        <div class="login-logo">
+            <h2>Jass HC</h2>
+            <span>Gestión Financiera</span>
+        </div>
+        
+        <form id="loginForm">
+            <div class="input-group">
+                <label><i class="fas fa-user"></i> Usuario</label>
+                <input type="text" id="user" placeholder="Ingresa tu usuario" required autocomplete="username">
+            </div>
+            <div class="input-group">
+                <label><i class="fas fa-lock"></i> Contraseña</label>
+                <input type="password" id="pass" placeholder="••••••••" required autocomplete="current-password">
+            </div>
+            <button type="submit" class="btn-login" id="btn-entrar">Entrar al Sistema</button>
+        </form>
+        <div id="msg"></div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+
+<script>
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxtupL9vw3Xkv586G8GtPoUcm7E1FwOSJ1O8SO7dIOlzxsUrMwHzGX7jDkBMwlckyLB/exec';
+
+    document.getElementById('loginForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const msg = document.getElementById('msg');
+        const btn = document.getElementById('btn-entrar');
+        const loader = document.getElementById('loader');
+        
+        let deviceID = localStorage.getItem('jass_device_id') || ('DEV-' + Math.random().toString(36).substr(2, 9).toUpperCase());
+        localStorage.setItem('jass_device_id', deviceID);
+
+        const data = {
+            origen: 'login',
+            usuario: document.getElementById('user').value,
+            password: document.getElementById('pass').value,
+            deviceID: deviceID
+        };
+
+        msg.style.display = "block";
+        msg.style.color = "#94a3b8";
+        msg.innerText = "Verificando identidad...";
+        btn.disabled = true;
+        loader.style.display = "flex";
+
+        try {
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify(data)
+            });
+            
+            const result = await response.text();
+            loader.style.display = "none";
+
+            if (result === "OK") {
+                msg.style.color = "#10b981";
+                msg.innerText = "Acceso autorizado. Redirigiendo...";
+                sessionStorage.setItem('session_active', 'true');
+                setTimeout(() => window.location.href = 'index.html', 1000);
+            } 
+            else if (result === "DISPOSITIVO_NUEVO") {
+                msg.innerHTML = "<span style='color:#facc15'>⚠️ Dispositivo nuevo.</span><br>Solicitud de acceso enviada al admin.";
+                btn.disabled = false;
+            } 
+            else if (result === "PENDIENTE" || result === "EXPIRADO") {
+                msg.innerHTML = "<span style='color:#facc15'>⏳ Acceso restringido.</span><br>Equipo en espera de aprobación.";
+                btn.disabled = false;
+            } 
+            else {
+                msg.style.color = "#ef4444";
+                msg.innerText = "Credenciales incorrectas.";
+                btn.disabled = false;
+            }
+            
+        } catch (err) {
+            loader.style.display = "none";
+            msg.style.color = "#ef4444";
+            msg.innerText = "Error de conexión.";
+            btn.disabled = false;
+        }
+    };
+</script>
+</body>
+</html>

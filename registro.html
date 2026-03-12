@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <title>Registro</title>
+	
+</head>
+<body>
+<header class="header" id="main-header"></header>
+<main class="main-content">
+  <div class="container">
+
+    <!-- Top Bar: Título a la izquierda, filtros y botón a la derecha -->
+	<div class="card visible">
+	
+    <div class="top-bar">
+      <!-- Título -->
+      <div class="title-group">
+        <h1>Registros</h1>
+      </div>
+
+      <!-- Controles: filtros + botón -->
+      <div class="controls">
+        <div class="field">
+          <label for="filtroMes">Mes</label>
+          <select id="filtroMes" onchange="aplicarFiltros()">
+            <option value="">Todos</option>
+            <option value="0">Enero</option>
+            <option value="1">Febrero</option>
+            <option value="2">Marzo</option>
+            <option value="3">Abril</option>
+            <option value="4">Mayo</option>
+            <option value="5">Junio</option>
+            <option value="6">Julio</option>
+            <option value="7">Agosto</option>
+            <option value="8">Septiembre</option>
+            <option value="9">Octubre</option>
+            <option value="10">Noviembre</option>
+            <option value="11">Diciembre</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="filtroAnio">Año</label>
+          <input type="number" id="filtroAnio" value="2026" onchange="aplicarFiltros()">
+        </div>
+
+        <div class="field">
+     <label>&nbsp;</label> <button id="btnRefresh" onclick="cargarDatos()">🔄 Actualizar Tabla</button>
+     </div>
+      </div>
+    </div>
+</div>
+    <!-- Tabla de datos -->
+    <div class="table-responsive">
+      <div id="loader" class="loading-msg">Cargando datos...</div>
+      <table id="tablaPrincipal">
+        <thead id="encabezadoTabla"></thead>
+        <tbody id="cuerpoTabla"></tbody>
+      </table>
+    </div>
+
+    <!-- Notificación tipo toast -->
+    <div id="toast">Notificación</div>
+
+  </div>
+</main>
+
+<script>
+if (sessionStorage.getItem('session_active') !== 'true') {
+      window.location.href = 'login.html';
+  }
+
+    const ENDPOINT = "https://script.google.com/macros/s/AKfycbzwj68IaM6EjvhO2hJnadCr-dt1QkP1xxyPz40tcv1VIVjHZiYpmB8kxA05zayhukk7/exec";
+
+    let datosGlobales = [];
+    let columnas = [];
+
+    async function cargarDatos() {
+        const loader = document.getElementById('loader');
+        const tabla = document.getElementById('tablaPrincipal');
+
+        loader.style.display = 'block';
+        tabla.style.display = 'none';
+        loader.innerText = "Cargando datos...";
+
+        try {
+            const url = ENDPOINT + (ENDPOINT.indexOf('?') === -1 ? '?' : '&') + 'action=json';
+            const respuesta = await fetch(url, { cache: 'no-store' });
+            if (!respuesta.ok) throw new Error('HTTP ' + respuesta.status);
+            
+            const resultado = await respuesta.json();
+
+            // EXTRACCIÓN CORRECTA: Si viene {ok: true, data: []} usamos data, si no, el objeto directo
+            const payload = (resultado && resultado.ok === true) ? resultado.data : resultado;
+
+            datosGlobales = Array.isArray(payload) ? payload.reverse() : [];
+
+            if (datosGlobales.length > 0) {
+                columnNameId = 'rowId'; // ID interno
+                columnas = Object.keys(datosGlobales[0]).filter(k => k !== 'rowId');
+                generarEncabezados();
+                aplicarFiltros();
+            } else {
+                loader.innerText = "La hoja está vacía o no tiene el formato correcto.";
+            }
+
+            loader.style.display = 'none';
+            tabla.style.display = 'table';
+
+        } catch (error) {
+            console.error(error);
+            loader.innerText = "Error de conexión. Verifica la URL de la Web App.";
+        }
+    }
+
+    function generarEncabezados() {
+        const tr = document.createElement('tr');
+        columnas.forEach(col => {
+            const th = document.createElement('th');
+            th.textContent = col;
+            tr.appendChild(th);
+        });
+        document.getElementById('encabezadoTabla').innerHTML = '';
+        document.getElementById('encabezadoTabla').appendChild(tr);
+    }
+
+    function aplicarFiltros() {
+    const mes = document.getElementById('filtroMes').value;
+    const anio = document.getElementById('filtroAnio').value;
+    const tbody = document.getElementById('cuerpoTabla');
+    tbody.innerHTML = '';
+
+    const datosFiltrados = datosGlobales.filter(fila => {
+        // Buscamos cualquier columna que se parezca a "Fecha"
+        const nombreColumnaFecha = Object.keys(fila).find(k => k.toLowerCase() === 'fecha');
+        const valorFecha = nombreColumnaFecha ? fila[nombreColumnaFecha] : null;
+
+        // Si NO hay columna de fecha, MOSTRAR la fila siempre (para que no salga vacío)
+        if (!valorFecha) return true; 
+        
+        const fechaObj = new Date(valorFecha);
+        
+        // Si la fecha no es válida, mostrar la fila para no perder datos
+        if (isNaN(fechaObj.getTime())) return true;
+
+        const coincideMes = mes === "" || fechaObj.getMonth() == mes;
+        const coincideAnio = anio === "" || fechaObj.getFullYear() == anio;
+        
+        return coincideMes && coincideAnio;
+    });
+
+    // Si después de filtrar no hay nada, avisamos
+    if (datosFiltrados.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="${columnas.length}" style="text-align:center; padding:20px;">
+            No hay datos para el mes ${mes} y año ${anio}. <br> 
+            <small>Prueba cambiando el filtro de mes a "Todos".</small>
+        </td></tr>`;
+        return;
+    }
+
+    // Dibujar las filas
+    datosFiltrados.forEach(fila => {
+        const tr = document.createElement('tr');
+        tr.dataset.rowid = fila.rowId;
+        columnas.forEach(col => {
+            const td = document.createElement('td');
+            td.className = 'editable';
+            td.dataset.col = col;
+            let valor = fila[col];
+            
+            // Formatear visualmente si es fecha ISO
+            if (typeof valor === 'string' && valor.includes('T')) {
+                const d = new Date(valor);
+                if (!isNaN(d)) {
+                    valor = d.toLocaleDateString();
+                }
+            }
+
+            td.textContent = (valor === null || valor === undefined) ? "" : valor;
+            td.onclick = function() { activarEdicion(this); };
+            tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+    });
+}
+
+    function activarEdicion(celda) {
+        if (celda.querySelector('input')) return;
+        const valorOriginal = celda.textContent;
+        const input = document.createElement('input');
+        input.value = valorOriginal;
+        celda.textContent = '';
+        celda.appendChild(input);
+        input.focus();
+        input.onblur = () => guardarCambios(celda, valorOriginal, input.value);
+        input.onkeydown = (e) => {
+            if (e.key === 'Enter') input.blur();
+            if (e.key === 'Escape') celda.textContent = valorOriginal;
+        };
+    }
+
+    async function guardarCambios(celda, valorOriginal, valorNuevo) {
+        if (valorOriginal === valorNuevo) {
+            celda.textContent = valorOriginal;
+            return;
+        }
+        const rowId = celda.parentElement.dataset.rowid;
+        const colName = celda.dataset.col;
+
+        mostrarNotificacion("Guardando...", "#f39c12");
+
+        const params = new URLSearchParams();
+        params.append('action', 'updateCell'); 
+        params.append('rowId', rowId);
+        params.append('columnName', colName);
+        params.append('newValue', valorNuevo);
+
+        try {
+            const respuesta = await fetch(ENDPOINT, { method: 'POST', body: params });
+            const resultado = await respuesta.json();
+
+            if (resultado.status === 'ok' || resultado.ok === true) {
+                celda.textContent = valorNuevo;
+                mostrarNotificacion("✅ Guardado", "#27ae60");
+                const filaLocal = datosGlobales.find(f => String(f.rowId) == String(rowId));
+                if (filaLocal) filaLocal[colName] = valorNuevo;
+            } else {
+                throw new Error(resultado.message || 'Error del servidor');
+            }
+        } catch (error) {
+            celda.textContent = valorOriginal;
+            mostrarNotificacion("❌ " + error.message, "#c0392b");
+        }
+    }
+
+    function mostrarNotificacion(mensaje, colorFondo) {
+        const toast = document.getElementById('toast');
+        toast.innerText = mensaje;
+        toast.style.background = colorFondo;
+        toast.style.display = 'block';
+        setTimeout(() => { toast.style.display = 'none'; }, 8000);
+    }
+
+    document.getElementById('filtroAnio').value = new Date().getFullYear();
+    cargarDatos();
+</script>
+ <script src="script.js"></script>
+
+</body>
+</html>

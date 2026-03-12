@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Calculadora de Precios Inteligente</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+     <link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+
+ <header class="header" id="main-header"></header>
+
+ <main class="main-content">
+ <div class="top-bar">
+    <h2>Calculadora de Precios</h2>
+</div>
+<div class="app">
+
+<div class="card visible">
+<h2>Calculadoras rápidas</h2>
+<div class="grid">
+  <!-- ITBIS -->
+  <div>
+    <h3>ITBIS</h3>
+    <label>Monto</label>
+    <input id="itbMonto" type="number" placeholder="Ingrese monto">
+    <label>% ITBIS</label>
+    <input id="itbPorc" type="number" placeholder="Ingrese porcentaje">
+    <button id="btnAgregarITBIS">+ Agregar ITBIS</button>
+    <button id="btnQuitarITBIS">− Quitar ITBIS</button>
+    <button id="btnUsarITBIS">💰 Usar en Costo real</button>
+    <button id="btnLimpiarITBIS" class="small">🗑 Limpiar</button>
+    <div id="resultadoITBIS" class="result-itbis"></div>
+  </div>
+  <!-- DESCUENTO INTELIGENTE -->
+  <div>
+    <h3>Descuento inteligente</h3>
+    <label>Precio original</label>
+    <input id="precioOrig" type="number" placeholder="Ingrese precio">
+
+    <label>% Descuento</label>
+    <input id="porcDesc" type="number" placeholder="Ingrese %">
+
+    <label>Monto descontado</label>
+    <input id="montoDesc" type="number" placeholder="Se calcula automáticamente">
+
+    <label>Precio con descuento</label>
+    <input id="precioDesc" type="number" placeholder="Se calcula automáticamente">
+
+    <button id="btnLimpiarDesc" class="small">🗑 Limpiar</button>
+  </div>
+</div>
+</div>
+
+<!-- ===== Datos base financieros ===== -->
+<div class="card visible">
+<h2>Datos base financieros</h2>
+<div class="grid">
+  <div>
+    <label>Descripción del producto</label>
+    <textarea id="descripcion" rows="2" placeholder="Nombre o descripción"></textarea>
+  </div>
+  
+  <div>
+    <label>Proveedor</label>
+    <input id="proveedor" type="text" placeholder="Nombre del proveedor">
+  </div>
+
+  <div>
+    <label>Costo real <span class="tip"><span class="tip-text">Costo del producto sin impuestos ni comisiones</span></span></label>
+    <input id="costo" type="number" placeholder="Obligatorio">
+  </div>
+
+  <div>
+    <label>ITBIS % <span class="tip"><span class="tip-text">Impuesto nominal sobre el precio</span></span></label>
+    <input id="itbis" type="number" placeholder="Obligatorio">
+  </div>
+
+  <div>
+    <label>Comisión % <span class="tip"><span class="tip-text">Comisión calculada sobre el precio de venta</span></span></label>
+    <input id="comision" type="number" placeholder="Obligatorio">
+  </div>
+
+  <div>
+    <label>Margen deseado % <span class="tip"><span class="tip-text">Ganancia esperada sobre el precio de venta</span></span></label>
+    <input id="margen" type="number" placeholder="Obligatorio">
+  </div>
+
+  <div>
+    <label>Descuento P2 %</label>
+    <input id="descuentoP2" type="number" value="5" placeholder="Descuento para P2">
+  </div>
+
+  <div>
+    <label>Descuento P3 %</label>
+    <input id="descuentoP3" type="number" value="10" placeholder="Descuento para P3">
+  </div>
+</div>
+<br>
+<button id="btnCalcular">Calcular precios</button>
+<button id="btnLimpiar">🗑 Limpiar datos</button>
+<div id="error-msg"></div>
+</div>
+
+<!-- ===== Resumen rápido ===== -->
+<div class="card visible">
+<h2>Resumen rápido</h2>
+<div class="summary" id="resumen"></div>
+</div>
+
+<!-- ===== Precios calculados ===== -->
+<div class="card visible">
+<h2>Precios calculados</h2>
+<div class="prices" id="precios"></div>
+</div>
+ </main>
+
+<script>
+
+  if (sessionStorage.getItem('session_active') !== 'true') {
+      window.location.href = 'login.html';
+  }
+
+document.addEventListener("DOMContentLoaded", function(){
+  // ===== ELEMENTOS =====
+  const btnCalcular=document.getElementById("btnCalcular");
+  const btnLimpiar=document.getElementById("btnLimpiar");
+  const btnAgregarITBIS=document.getElementById("btnAgregarITBIS");
+  const btnQuitarITBIS=document.getElementById("btnQuitarITBIS");
+  const btnLimpiarITBIS=document.getElementById("btnLimpiarITBIS");
+  const btnUsarITBIS=document.getElementById("btnUsarITBIS");
+  const resultadoITBIS=document.getElementById("resultadoITBIS");
+  const campoCosto=document.getElementById("costo");
+
+  const precioOrig=document.getElementById("precioOrig");
+  const porcDesc=document.getElementById("porcDesc");
+  const montoDesc=document.getElementById("montoDesc");
+  const precioDesc=document.getElementById("precioDesc");
+  const btnLimpiarDesc=document.getElementById("btnLimpiarDesc");
+
+  btnCalcular.addEventListener("click", calcular);
+  btnLimpiar.addEventListener("click", limpiar);
+  btnAgregarITBIS.addEventListener("click", agregarITBIS);
+  btnQuitarITBIS.addEventListener("click", quitarITBIS);
+  btnLimpiarITBIS.addEventListener("click", limpiarITBIS);
+  btnUsarITBIS.addEventListener("click", usarITBIS);
+
+  btnLimpiarDesc.addEventListener("click",()=>{
+    [precioOrig,porcDesc,montoDesc,precioDesc].forEach(f=>f.value='');
+  });
+
+  // ===== Funciones Aux =====
+  function round5(v){return Math.ceil(v/5)*5;}
+  function sem(m){return m>=25?'verde':m>=19?'amarillo':'rojo';}
+
+  // ===== ITBIS =====
+  function agregarITBIS(){
+    const monto=parseFloat(document.getElementById("itbMonto").value);
+    const porc=parseFloat(document.getElementById("itbPorc").value);
+    if(isNaN(monto) || isNaN(porc)){resultadoITBIS.textContent="Complete ambos campos."; return;}
+    const itb=monto*porc/100;
+    resultadoITBIS.textContent=`Monto con ITBIS: RD$ ${(monto+itb).toFixed(2)} (ITBIS: RD$ ${itb.toFixed(2)})`;
+  }
+  function quitarITBIS(){
+    const monto=parseFloat(document.getElementById("itbMonto").value);
+    const porc=parseFloat(document.getElementById("itbPorc").value);
+    if(isNaN(monto) || isNaN(porc)){resultadoITBIS.textContent="Complete ambos campos."; return;}
+    const base = monto / (1 + porc/100);
+    const itb = monto - base;
+    resultadoITBIS.textContent=`Monto sin ITBIS: RD$ ${base.toFixed(2)} (ITBIS: RD$ ${itb.toFixed(2)})`;
+  }
+  function usarITBIS(){
+    if(resultadoITBIS.textContent.includes("RD$")){
+      const match = resultadoITBIS.textContent.match(/RD\$ ([0-9,.]+)/);
+      if(match) campoCosto.value = parseFloat(match[1].replace(/,/g,'')); 
+    } else { alert("Primero calcule el monto con o sin ITBIS."); }
+  }
+  function limpiarITBIS(){
+    document.getElementById("itbMonto").value="";
+    document.getElementById("itbPorc").value="";
+    resultadoITBIS.textContent="";
+  }
+
+  // ===== DESCUENTO INTELIGENTE =====
+  function actualizarDescuento(changed){
+    const precio=parseFloat(precioOrig.value);
+    const porc=parseFloat(porcDesc.value);
+    const monto=parseFloat(montoDesc.value);
+    const precioFin=parseFloat(precioDesc.value);
+
+    if(!precio || precio<=0) return;
+
+    if(changed==="porc"){
+      if(!isNaN(porc)){
+        const montoCalc=precio*porc/100;
+        montoDesc.value=montoCalc.toFixed(2);
+        precioDesc.value=(precio-montoCalc).toFixed(2);
+      }
+    } else if(changed==="monto"){
+      if(!isNaN(monto)){
+        porcDesc.value=(monto/precio*100).toFixed(2);
+        precioDesc.value=(precio-monto).toFixed(2);
+      }
+    } else if(changed==="precioDesc"){
+      if(!isNaN(precioFin)){
+        const montoCalc=precio-precioFin;
+        montoDesc.value=montoCalc.toFixed(2);
+        porcDesc.value=(montoCalc/precio*100).toFixed(2);
+      }
+    }
+  }
+  precioOrig.addEventListener("input",()=>{actualizarDescuento("porc");});
+  porcDesc.addEventListener("input",()=>{actualizarDescuento("porc");});
+  montoDesc.addEventListener("input",()=>{actualizarDescuento("monto");});
+  precioDesc.addEventListener("input",()=>{actualizarDescuento("precioDesc");});
+
+  // ===== CALCULO PRECIOS =====
+  function calcular(){
+    const cField=document.getElementById('costo');
+    const itField=document.getElementById('itbis');
+    const coField=document.getElementById('comision');
+    const mField=document.getElementById('margen');
+    const descP2=document.getElementById('descuentoP2');
+    const descP3=document.getElementById('descuentoP3');
+    const errorMsg=document.getElementById('error-msg');
+    const resumen=document.getElementById('resumen');
+    const precios=document.getElementById('precios');
+
+    [cField,itField,coField,mField].forEach(f=>f.classList.remove('error'));
+    errorMsg.style.display='none'; errorMsg.textContent=''; resumen.innerHTML=''; precios.innerHTML='';
+
+    let vacios=[]; 
+    if(!cField.value) vacios.push(cField);
+    if(!itField.value) vacios.push(itField);
+    if(!coField.value) vacios.push(coField);
+    if(!mField.value) vacios.push(mField);
+    if(vacios.length){vacios.forEach(f=>f.classList.add('error')); errorMsg.textContent="Complete todos los campos obligatorios."; errorMsg.style.display='block'; return;}
+
+    const c=+cField.value;
+    const it_nom=+itField.value/100;
+    const it_eff=it_nom/(1+it_nom);
+    const co=+coField.value/100;
+    const m=+mField.value/100;
+
+    const p1=round5(c/(1-(it_eff+co+m)));
+    const p2=round5(p1*(1-(+descP2.value)/100));
+    const p3=round5(p1*(1-(+descP3.value)/100));
+    const arr=[p1,p2,p3], nom=['P1','P2','P3'];
+
+    arr.forEach((p,i)=>{
+      const itb=p*it_eff;
+      const com=p*co;
+      const ben=p-(c+itb+com);
+      const mar=ben/p*100;
+
+      // Resumen
+      const cardR=document.createElement('div');
+      cardR.className=`summary-card ${sem(mar)}`;
+      cardR.innerHTML=`<h4>${nom[i]}</h4><div class="summary-price">RD$ ${p.toFixed(2)}</div><div class="summary-meta"><span>Beneficio RD$ ${ben.toFixed(2)}</span><strong>${mar.toFixed(1)}%</strong></div>`;
+      resumen.appendChild(cardR);
+      setTimeout(()=>cardR.classList.add('visible'),50);
+
+      // Precios
+      const cardP=document.createElement('div');
+      cardP.className='price-card';
+      cardP.innerHTML=`<h3>${nom[i]}</h3><div class="price-value">RD$ ${p.toFixed(2)}</div><span class="badge ${sem(mar)}-b">Margen ${mar.toFixed(1)}%</span>
+        <table class="table">
+        <tr><th>Costo</th><td>${c.toFixed(2)}</td><td>${(c/p*100).toFixed(1)}%</td></tr>
+        <tr><th>ITBIS</th><td>${itb.toFixed(2)}</td><td>${(it_eff*100).toFixed(2)}%</td></tr>
+        <tr><th>Comisión</th><td>${com.toFixed(2)}</td><td>${(co*100).toFixed(1)}%</td></tr>
+        <tr><th>Beneficio</th><td>${ben.toFixed(2)}</td><td>${mar.toFixed(1)}%</td></tr>
+        <tr class="total"><th>Total</th><td>${p.toFixed(2)}</td><td>100%</td></tr>
+        </table>
+        <div class="bar"><div class="b-costo" style="flex:0;"></div><div class="b-itbis" style="flex:0;"></div><div class="b-com" style="flex:0;"></div><div class="b-ben" style="flex:0;"></div></div>`;
+      precios.appendChild(cardP);
+      setTimeout(()=>{
+        cardP.classList.add('visible');
+        const bar=cardP.querySelectorAll('.bar div');
+        bar[0].style.flex=c/p; bar[1].style.flex=itb/p; bar[2].style.flex=com/p; bar[3].style.flex=ben/p;
+      },50);
+    });
+  }
+
+  function limpiar(){
+    ['descripcion','proveedor','costo','itbis','comision','margen','descuentoP2','descuentoP3'].forEach(id=>{
+      const f=document.getElementById(id); f.value=id.includes('descuento')?(id==='descuentoP2'?5:10):''; f.classList.remove('error');
+    });
+    document.getElementById('resumen').innerHTML='';
+    document.getElementById('precios').innerHTML='';
+    const errorMsg=document.getElementById('error-msg'); errorMsg.style.display='none'; errorMsg.textContent='';
+  }
+
+});
+</script>
+ <script src="script.js"></script>
+</body>
+</html>
