@@ -15,6 +15,10 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
 
         ${!isLoginPage ? `
+        <button type="button" class="menu-mobile-toggle">
+            <i class="fas fa-bars"></i>
+            <span>Menú Principal</span>
+        </button>
         <nav class="nav">
             <ul class="nav-list">
                 <li class="nav-item dropdown">
@@ -55,7 +59,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     </ul>
                 </li>
             </ul>
-        </nav>` : ''}
+        </nav>
+        <div class="nav-indicator">
+            <span class="nav-dot active"></span>
+            <span class="nav-dot"></span>
+            <span class="nav-dot"></span>
+        </div>
+        ` : ''}
 
         <div class="header-info">
             <span id="currentDate" class="date-display"></span>
@@ -88,50 +98,66 @@ document.addEventListener('DOMContentLoaded', () => {
         setInterval(updateClock, 1000);
         updateClock();
 
-        // --- LÓGICA DE NAVEGACIÓN (Solo si hay sesión) ---
         if (!isLogin) {
             const dropdowns = document.querySelectorAll('.dropdown');
+            const mobileToggle = document.querySelector('.menu-mobile-toggle');
+            const mainNavList = document.querySelector('.nav-list');
 
+            // --- LÓGICA DROPDOWNS ---
             dropdowns.forEach(dropdown => {
                 const btn = dropdown.querySelector('.dropdown-toggle');
-                
+                if (!btn) return;
+
                 btn.onclick = (e) => {
                     e.stopPropagation();
                     const isActive = dropdown.classList.contains('active');
                     
-                    // Resetear todos los menús y flechas
+                    // Cerrar otros dropdowns
                     dropdowns.forEach(d => {
-                        d.classList.remove('active');
-                        const arrow = d.querySelector('.arrow');
-                        if(arrow) arrow.style.transform = 'rotate(0deg)';
+                        if (d !== dropdown) {
+                            d.classList.remove('active');
+                            const arrow = d.querySelector('.arrow');
+                            if(arrow) arrow.style.transform = 'rotate(0deg)';
+                        }
                     });
 
-                    // Activar el actual si no estaba abierto
-                    if (!isActive) {
-                        dropdown.classList.add('active');
-                        const arrow = dropdown.querySelector('.arrow');
-                        if(arrow) arrow.style.transform = 'rotate(180deg)';
+                    // Alternar el actual
+                    dropdown.classList.toggle('active');
+                    const arrow = dropdown.querySelector('.arrow');
+                    if(arrow) {
+                        arrow.style.transform = dropdown.classList.contains('active') ? 'rotate(180deg)' : 'rotate(0deg)';
                     }
                 };
             });
 
-            // Cerrar al hacer clic fuera
-            document.addEventListener('click', () => {
-                dropdowns.forEach(d => {
-                    d.classList.remove('active');
-                    const arrow = d.querySelector('.arrow');
-                    if(arrow) arrow.style.transform = 'rotate(0deg)';
-                });
-            });
+            // --- LÓGICA MENÚ MÓVIL ---
+            if (mobileToggle && mainNavList) {
+                mobileToggle.onclick = (e) => {
+                    e.stopPropagation();
+                    mainNavList.classList.toggle('mobile-active');
+                    const icon = mobileToggle.querySelector('i');
+                    if (icon) {
+                        icon.className = mainNavList.classList.contains('mobile-active') ? 'fas fa-times' : 'fas fa-bars';
+                    }
+                };
+            }
 
-            // Cerrar con tecla Escape
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') {
-                    dropdowns.forEach(d => {
+            // --- CERRAR AL CLICAR FUERA ---
+            document.addEventListener('click', (e) => {
+                // Cerrar dropdowns
+                dropdowns.forEach(d => {
+                    if (!d.contains(e.target)) {
                         d.classList.remove('active');
                         const arrow = d.querySelector('.arrow');
                         if(arrow) arrow.style.transform = 'rotate(0deg)';
-                    });
+                    }
+                });
+
+                // Cerrar menú móvil si se clica fuera de él y del botón toggle
+                if (mainNavList && !mainNavList.contains(e.target) && !mobileToggle.contains(e.target)) {
+                    mainNavList.classList.remove('mobile-active');
+                    const icon = mobileToggle.querySelector('i');
+                    if (icon) icon.className = 'fas fa-bars';
                 }
             });
 
@@ -149,9 +175,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- MODO CLARO/OSCURO ---
         const themeBtn = document.getElementById('themeToggle');
         const html = document.documentElement;
-        const currentTheme = localStorage.getItem('theme') || 'dark';
         
+        // Cargar tema inicial
+        const currentTheme = localStorage.getItem('theme') || 'dark';
         html.setAttribute('data-theme', currentTheme);
+        
         if (themeBtn) {
             themeBtn.innerHTML = currentTheme === 'dark' ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
             themeBtn.onclick = () => {
