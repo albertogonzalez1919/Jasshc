@@ -28,7 +28,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         <li><a href="egresos.html"><i class="fas fa-arrow-down"></i> Egresos</a></li>
                         <li><a href="cuentaxpagar.html"><i class="fas fa-clock"></i> Cuentas x Pagar</a></li>
                         <li><a href="cajaybanco.html"><i class="fas fa-university"></i> Caja y Banco</a></li>
-                        <li class="divider"></li>
                         <li><a href="reportes.html"><i class="fas fa-chart-bar"></i> Reportes</a></li>
                         <li><a href="registro.html"><i class="fas fa-list-alt"></i> Registro</a></li>
                     </ul>
