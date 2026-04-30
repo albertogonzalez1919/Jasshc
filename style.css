@@ -2736,3 +2736,18 @@ button.small {
         height: 48px; /* ¡CORREGIDO! Antes estaba en 20px (imposible de tocar) */
     }
 }
+
+/* ===== FIX GRID ESCRITORIO ===== */
+.form-grid {
+  display: grid ;
+  grid-template-columns: repeat(3, 1fr);
+  column-gap: 20px;
+  row-gap: 32px;
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
