@@ -199,7 +199,9 @@ if (sessionStorage.getItem('session_active') !== 'true') {
     // URL de tu Web App de Google Apps Script
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwQWIdDLqOI6VXljTGVM9fHNow5EwgbRJiElvjumlyMuWYfxPwjP6WQsgMuEPuLKQ2W/exec";
 	const CONFIG_URL = 'https://script.google.com/macros/s/AKfycbxtFBNhe3YuVv0dZ65aw1l8HBC1pSUj5wCCq8WMAH4k0mqOSJ-dWqZD6pfzVyufbdVP/exec';
-
+   
+	let listaBancosGlobal = [];
+	  
     // --- SELECCIÓN DE ELEMENTOS DEL DOM ---
     const Fecha = document.getElementById('Fecha');
     const Total = document.getElementById('Total');
